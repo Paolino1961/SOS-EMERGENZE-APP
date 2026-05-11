@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SOS Drive - Emergenza (v0030 - doppio riferimento, bip, avvio ascolto)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: auto;
+        }
+        .page {
+            background: white;
+            border-radius: 32px;
+            padding: 24px 20px 32px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .hidden {
+            display: none;
+        }
+        h1, h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #d32f2f;
+        }
+        .version-header {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 6px;
+        }
+        .grid-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .big-btn {
+            background: #d32f2f;
+            border: none;
+            border-radius: 60px;
+            padding: 18px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: white;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: transform 0.05s linear;
+        }
+        .big-btn:active {
+            transform: scale(0.97);
+        }
+        .btn-secondary {
+            background: #2196f3;
+        }
+        .btn-copy {
+            background: #ff9800;
+        }
+        .btn-audio {
+            background: #9c27b0;
+        }
+        .btn-gps {
+            background: #4caf50;
+        }
+        .small-btn {
+            padding: 12px 16px;
+            font-size: 1rem;
+            border-radius: 40px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            margin: 6px 0;
+        }
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 28px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            background: #fefefe;
+            margin: 8px 0;
+            font-family: monospace;
+        }
+        .info-card {
+            background: #f0f0f0;
+            border-radius: 24px;
+            padding: 14px;
+            margin: 16px 0;
+            word-break: break-word;
+        }
+        .note-item {
+            background: #faf0e6;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .note-text {
+            flex: 1;
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+        .delete-note {
+            background: #e57373;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .radio-note {
+            transform: scale(1.2);
+            margin-right: 6px;
+        }
+        .edit-note-area {
+            background: #fff8e1;
+            border-radius: 24px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+        .edit-note-area label {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .back-home {
+            background: #607d8b;
+            margin-top: 16px;
+        }
+        .status-msg {
+            font-size: 0.8rem;
+            color: #2c3e66;
+            margin-top: 8px;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        .id-badge {
+            display: none;
+        }
+        .version-footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 12px;
+        }
+        .import-export {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .import-export button {
+            background: #607d8b;
+            flex: 1;
+        }
+        .response-area {
+            background: #e8f0fe;
+            border-radius: 24px;
+            padding: 12px;
+            margin: 20px 0 12px;
+        }
+        .response-area textarea {
+            background: #fff;
+            margin: 8px 0;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="homePage" class="page">
+        <div class="version-header">📟 SOS Drive - Versione 0030 (doppio riferimento, bip, ascolto automatico) | HTML</div>
+        <h1>🆘 SOS EMERGENZA</h1>
+        <div class="grid-2">
+            <button class="big-btn" data-service="ambulanza">🚑 AMBULANZA</button>
+            <button class="big-btn" data-service="polizia">👮 POLIZIA</button>
+            <button class="big-btn" data-service="veterinario">🐾 VETERINARIO</button>
+            <button class="big-btn" data-service="clinica">🏥 CLINICA</button>
+        </div>
+        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Due riferimenti con distanza (es. “Ristorante X a 250 m”).<br>🔊 Lettura normale (velocità 0.8), coordinate con pausa 3 secondi.<br>🔔 Alla fine della lettura: bip + “HO CAPITO” + avvio automatico ascolto operatore.</p>
+        <div class="version-footer">versione 0030 - Doppio POI, lettura 0.8, pausa 3s, bip, avvio ascolto.</div>
+    </div>
+
+    <div id="emergencyPage" class="page hidden">
+        <div class="version-header">📟 SOS Drive - Versione 0030 (doppio riferimento, ascolto automatico) | HTML</div>
+        <div class="flex-between">
+            <h2 id="serviceTitle">AMBULANZA</h2>
+            <span id="emergencyIdBadge" class="id-badge"></span>
+        </div>
+
+        <label>📞 Numero servizio (modificabile e memorizzato)</label>
+        <div class="flex-row">
+            <input type="tel" id="phoneNumber" value="" style="flex:2;">
+            <button id="callBtn" class="small-btn btn-secondary" style="flex:0.5;">CHIAMA</button>
+        </div>
+        <div id="phoneSaveMsg" class="status-msg"></div>
+
+        <button id="googleMapsBtn" class="small-btn btn-secondary" style="width:100%;">🗺️ APRI GOOGLE MAPS</button>
+        <button id="geolocationBtn" class="small-btn btn-gps" style="width:100%; background:#2e7d32;">📍 CARICA POSIZIONE + INDIRIZZO</button>
+
+        <div id="coordsContainer" class="info-card">
+            <div><strong>📌 COORDINATE:</strong> <span id="latLonDisplay">---</span></div>
+            <div><strong>🏠 INDIRIZZO:</strong> <span id="addressDisplay">---</span></div>
+            <div><strong>📍 RIFERIMENTO a:</strong> <span id="refADisplay">---</span></div>
+            <div><strong>📍 RIFERIMENTO b:</strong> <span id="refBDisplay">---</span></div>
+            <div id="gpsStatus" class="status-msg"></div>
+        </div>
+
+        <div class="flex-row">
+            <input type="text" id="newNoteInput" placeholder="Es: NUOVA NOTA scrivi in italiano (es: Sanguinamento, necessito ambulanza)" style="flex:3;">
+            <button id="addNoteBtn" class="small-btn" style="background:#ff9800;">➕ AGGIUNGI</button>
+        </div>
+        <div id="notesListArea">
+            <div style="font-size:0.8rem; color:#777;">Nessuna nota. Aggiungine una, poi seleziona quella da usare.</div>
+        </div>
+
+        <div id="editNoteArea" class="edit-note-area" style="display:none;">
+            <label>✏️ Modifica nota (italiano):</label>
+            <textarea id="editNoteText" rows="2"></textarea>
+            <div class="flex-row">
+                <button id="saveNoteEditBtn" class="small-btn" style="background:#4caf50;">💾 SALVA MODIFICHE</button>
+                <button id="cancelNoteEditBtn" class="small-btn" style="background:#9e9e9e;">ANNULLA</button>
+            </div>
+        </div>
+
+        <div class="import-export">
+            <button id="exportNotesBtn" class="small-btn" style="background:#4caf50;">💾 ESPORTA NOTE (TXT)</button>
+            <button id="importNotesBtn" class="small-btn" style="background:#2196f3;">📂 IMPORTA NOTE (TXT)</button>
+            <input type="file" id="importFileInput" accept=".txt" style="display:none;">
+        </div>
+
+        <div class="response-area">
+            <label>🎧 RISPOSTA DELL'OPERATORE TRADOTTA IN ITALIANO</label>
+            <textarea id="operatorResponse" rows="3" placeholder="La traduzione in italiano apparirà qui" readonly></textarea>
+            <div class="flex-row">
+                <button id="listenResponseBtn" class="small-btn" style="background:#3f51b5; flex:1;">🎤 ASCOLTA RISPOSTA OPERATORE E TRADUCI</button>
+                <button id="clearResponseBtn" class="small-btn" style="background:#757575; flex:0.5;">🗑️ Cancella</button>
+            </div>
+            <div id="transcribeStatus" class="status-msg"></div>
+        </div>
+
+        <div class="flex-row">
+            <button id="copyBtn" class="small-btn btn-copy" style="flex:1;">📋 COPIA (IT)</button>
+            <button id="audioItBtn" class="small-btn btn-audio" style="flex:1;">🔊 LEGGI IT</button>
+            <button id="audioFrBtn" class="small-btn btn-audio" style="flex:1;">🔊 LEGGI FR</button>
+        </div>
+
+        <button id="backHomeBtn" class="small-btn back-home" style="width:100%; margin-top:24px;">◀ TORNA INDIETRO</button>
+        <div class="version-footer">versione 0030 - Due riferimenti, lettura 0.8, pausa 3s, bip, avvio ascolto automatico.</div>
+    </div>
+</div>
+
+<script>
+    // ========================= VERSIONE 0030 =========================
+    // MODIFICHE:
+    // 1) Due punti di interesse (RIFERIMENTO a e b) con distanza in metri, esclusi tag poco utili.
+    // 2) Velocità di lettura normale ridotta al 20% (0.8), spell per coordinate a 0.6, pausa 3 secondi tra caratteri.
+    // 3) Testa messaggio: "SONO ITALIANO, QUESTO E' UN MESSAGGIO REGISTRATO DI EMERGENZA, ..." + nota selezionata.
+    //    Piedi: dopo il bip (suono generato con Web Audio) pronuncia "HO CAPITO".
+    // 4) Al termine della lettura (dopo bip e "HO CAPITO") si avvia automaticamente il riconoscimento vocale (ascolta risposta operatore).
+    // 5) Tutti i tasti rimangono attivi.
+    // =================================================================
+
+    const CURRENT_VERSION = "0030";
+    let currentService = "ambulanza";
+    let currentLat = null, currentLng = null;
+    let currentAddress = "";
+    let currentRefA = "";   // primo riferimento (più vicino)
+    let currentRefB = "";   // secondo riferimento
+    let notesArray = [];
+    let selectedNoteId = null;
+
+    // DOM
+    const homePage = document.getElementById('homePage');
+    const emergencyPage = document.getElementById('emergencyPage');
+    const serviceTitleSpan = document.getElementById('serviceTitle');
+    const phoneInput = document.getElementById('phoneNumber');
+    const callBtn = document.getElementById('callBtn');
+    const googleMapsBtn = document.getElementById('googleMapsBtn');
+    const geolocationBtn = document.getElementById('geolocationBtn');
+    const latLonDisplay = document.getElementById('latLonDisplay');
+    const addressDisplay = document.getElementById('addressDisplay');
+    const refADisplay = document.getElementById('refADisplay');
+    const refBDisplay = document.getElementById('refBDisplay');
+    const gpsStatus = document.getElementById('gpsStatus');
+    const newNoteInput = document.getElementById('newNoteInput');
+    const addNoteBtn = document.getElementById('addNoteBtn');
+    const notesListArea = document.getElementById('notesListArea');
+    const copyBtn = document.getElementById('copyBtn');
+    const audioItBtn = document.getElementById('audioItBtn');
+    const audioFrBtn = document.getElementById('audioFrBtn');
+    const backHomeBtn = document.getElementById('backHomeBtn');
+    const phoneSaveMsg = document.getElementById('phoneSaveMsg');
+    const exportNotesBtn = document.getElementById('exportNotesBtn');
+    const importNotesBtn = document.getElementById('importNotesBtn');
+    const importFileInput = document.getElementById('importFileInput');
+    const editNoteArea = document.getElementById('editNoteArea');
+    const editNoteText = document.getElementById('editNoteText');
+    const saveNoteEditBtn = document.getElementById('saveNoteEditBtn');
+    const cancelNoteEditBtn = document.getElementById('cancelNoteEditBtn');
+    const operatorResponse = document.getElementById('operatorResponse');
+    const listenResponseBtn = document.getElementById('listenResponseBtn');
+    const clearResponseBtn = document.getElementById('clearResponseBtn');
+    const transcribeStatus = document.getElementById('transcribeStatus');
+
+    let currentEditingNoteId = null;
+    let recognition = null;
+
+    // ----------------------------- TRADUZIONI ---------------------------------
+    async function translateToFrench(italianText) {
+        if (!italianText || italianText.trim() === "") return "";
+        try {
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(italianText)}&langpair=it|fr`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data && data.responseData && data.responseData.translatedText) return data.responseData.translatedText;
+        } catch (e) { console.warn("Errore traduzione IT→FR", e); }
+        return italianText;
+    }
+
+    async function translateFrenchToItalian(frenchText) {
+        if (!frenchText || frenchText.trim() === "") return "";
+        try {
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(frenchText)}&langpair=fr|it`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data && data.responseData && data.responseData.translatedText) return data.responseData.translatedText;
+        } catch (e) { console.warn("Errore traduzione FR→IT", e); }
+        return frenchText + " (traduzione non riuscita)";
+    }
+
+    // ----------------------------- RICONOSCIMENTO VOCALE (FR) -----------------------------
+    function initSpeechRecognition() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            transcribeStatus.innerText = "❌ Riconoscimento vocale non supportato.";
+            return false;
+        }
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'fr-FR';
+        recognition.maxAlternatives = 1;
+        return true;
+    }
+
+    async function startListening() {
+        if (!recognition && !initSpeechRecognition()) return;
+        transcribeStatus.innerText = "🎤 In ascolto (francese)... Parla ora.";
+        recognition.start();
+        recognition.onresult = async (event) => {
+            const frenchTranscript = event.results[0][0].transcript;
+            transcribeStatus.innerText = "⏳ Traduzione in corso...";
+            const italianTranslation = await translateFrenchToItalian(frenchTranscript);
+            operatorResponse.value = italianTranslation;
+            transcribeStatus.innerText = "✅ Risposta tradotta e inserita.";
+            setTimeout(() => { if (transcribeStatus.innerText.includes("inserita")) transcribeStatus.innerText = ""; }, 3000);
+        };
+        recognition.onerror = (event) => {
+            console.error(event);
+            let msg = "❌ Errore: ";
+            if (event.error === 'not-allowed') msg += "Permesso microfono negato.";
+            else if (event.error === 'no-speech') msg += "Nessun parlato rilevato.";
+            else msg += event.error;
+            transcribeStatus.innerText = msg;
+        };
+        recognition.onend = () => {
+            if (transcribeStatus.innerText === "🎤 In ascolto (francese)... Parla ora.") 
+                transcribeStatus.innerText = "⏹️ Ascolto terminato.";
+        };
+    }
+
+    // ----------------------------- GESTIONE NOTE -----------------------------
+    function migrateFromPreviousVersions() {
+        const services = ["ambulanza", "polizia", "veterinario", "clinica"];
+        const oldVersions = ["0029", "0028", "0027"];
+        for (let service of services) {
+            const currentKey = `sos_notes_${service}_${CURRENT_VERSION}`;
+            if (localStorage.getItem(currentKey)) continue;
+            for (let ver of oldVersions) {
+                const oldKey = `sos_notes_${service}_${ver}`;
+                const oldData = localStorage.getItem(oldKey);
+                if (oldData) {
+                    try {
+                        let oldNotes = JSON.parse(oldData);
+                        if (Array.isArray(oldNotes)) {
+                            let normalized = normalizeImportedNotesArray(oldNotes);
+                            if (normalized.length) {
+                                localStorage.setItem(currentKey, JSON.stringify(normalized));
+                                const oldSelectedKey = `sos_selected_note_${service}_${ver}`;
+                                const oldSelected = localStorage.getItem(oldSelectedKey);
+                                if (oldSelected && normalized.some(n => n.id == parseInt(oldSelected))) {
+                                    localStorage.setItem(`sos_selected_note_${service}_${CURRENT_VERSION}`, oldSelected);
+                                }
+                                break;
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }
+        }
+    }
+
+    function normalizeImportedNotesArray(rawNotes) {
+        if (!Array.isArray(rawNotes)) return [];
+        const normalized = [];
+        for (let note of rawNotes) {
+            let textValue = null;
+            if (note.text && typeof note.text === 'string') textValue = note.text;
+            else if (note.textIT && typeof note.textIT === 'string') textValue = note.textIT;
+            if (textValue && textValue.trim() !== "") {
+                let idVal = (typeof note.id === 'number' && !isNaN(note.id)) ? note.id : Date.now() + Math.floor(Math.random() * 10000);
+                normalized.push({ id: idVal, text: textValue.trim() });
+            }
+        }
+        return normalized;
+    }
+
+    function getNoteStorageKey(s) { return `sos_notes_${s}_${CURRENT_VERSION}`; }
+    function getSelectedNoteIdKey(s) { return `sos_selected_note_${s}_${CURRENT_VERSION}`; }
+    function saveNotesForCurrentService() {
+        if (!currentService) return;
+        localStorage.setItem(getNoteStorageKey(currentService), JSON.stringify(notesArray));
+        if (selectedNoteId) localStorage.setItem(getSelectedNoteIdKey(currentService), selectedNoteId.toString());
+        else localStorage.removeItem(getSelectedNoteIdKey(currentService));
+    }
+    function loadNotesForService(service) {
+        const stored = localStorage.getItem(getNoteStorageKey(service));
+        if (stored) {
+            try {
+                let parsed = JSON.parse(stored);
+                notesArray = normalizeImportedNotesArray(parsed);
+                const savedId = localStorage.getItem(getSelectedNoteIdKey(service));
+                if (savedId && notesArray.some(n => n.id == parseInt(savedId))) selectedNoteId = parseInt(savedId);
+                else if (notesArray.length) selectedNoteId = notesArray[0].id;
+                else selectedNoteId = null;
+                renderNotesList();
+            } catch(e) { notesArray = []; selectedNoteId = null; renderNotesList(); }
+        } else { notesArray = []; selectedNoteId = null; renderNotesList(); }
+        editNoteArea.style.display = 'none';
+        currentEditingNoteId = null;
+    }
+
+    function renderNotesList() {
+        if (notesArray.length === 0) {
+            notesListArea.innerHTML = `<div style="font-size:0.8rem; color:#777;">Nessuna nota. Aggiungine una.</div>`;
+            selectedNoteId = null;
+            editNoteArea.style.display = 'none';
+            return;
+        }
+        let html = '<div style="margin-bottom:8px;"><strong>📋 Note disponibili (seleziona quella da usare):</strong></div>';
+        notesArray.forEach(note => {
+            const isChecked = (selectedNoteId === note.id) ? 'checked' : '';
+            html += `
+                <div class="note-item">
+                    <input type="radio" name="noteSelect" value="${note.id}" class="radio-note" ${isChecked}>
+                    <span class="note-text">${escapeHtml(note.text)}</span>
+                    <button class="delete-note" data-id="${note.id}">🗑️ Elimina</button>
+                </div>
+            `;
+        });
+        notesListArea.innerHTML = html;
+        document.querySelectorAll('input[name="noteSelect"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const id = parseInt(e.target.value, 10);
+                selectedNoteId = id;
+                saveNotesForCurrentService();
+                const selected = notesArray.find(n => n.id === selectedNoteId);
+                if (selected) { editNoteText.value = selected.text; editNoteArea.style.display = 'block'; currentEditingNoteId = selectedNoteId; }
+            });
+        });
+        document.querySelectorAll('.delete-note').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.getAttribute('data-id'), 10);
+                notesArray = notesArray.filter(n => n.id !== id);
+                if (selectedNoteId === id) selectedNoteId = notesArray.length ? notesArray[0].id : null;
+                renderNotesList(); saveNotesForCurrentService();
+                if (selectedNoteId === null) editNoteArea.style.display = 'none';
+                else { const sel = notesArray.find(n => n.id === selectedNoteId); if (sel) { editNoteText.value = sel.text; editNoteArea.style.display = 'block'; currentEditingNoteId = selectedNoteId; } }
+            });
+        });
+        if (selectedNoteId && editNoteArea.style.display === 'none') {
+            const sel = notesArray.find(n => n.id === selectedNoteId);
+            if (sel) { editNoteText.value = sel.text; editNoteArea.style.display = 'block'; currentEditingNoteId = selectedNoteId; }
+        }
+    }
+
+    function saveCurrentEdit() {
+        if (currentEditingNoteId === null) return;
+        const newText = editNoteText.value.trim();
+        if (!newText) { gpsStatus.innerHTML = "⚠️ Nota vuota."; return; }
+        const idx = notesArray.findIndex(n => n.id === currentEditingNoteId);
+        if (idx !== -1) { notesArray[idx].text = newText; saveNotesForCurrentService(); renderNotesList(); gpsStatus.innerHTML = "✅ Nota modificata."; setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 2000); }
+    }
+    function cancelEdit() { editNoteArea.style.display = 'none'; currentEditingNoteId = null; }
+
+    function addNote() {
+        const text = newNoteInput.value.trim();
+        if (!text) { alert("Scrivi una nota"); return; }
+        const newId = Date.now() + Math.floor(Math.random() * 10000);
+        notesArray.push({ id: newId, text: text });
+        if (notesArray.length === 1) selectedNoteId = newId;
+        renderNotesList(); saveNotesForCurrentService(); newNoteInput.value = '';
+        if (selectedNoteId) { const sel = notesArray.find(n => n.id === selectedNoteId); if (sel) { editNoteText.value = sel.text; editNoteArea.style.display = 'block'; currentEditingNoteId = selectedNoteId; } }
+    }
+
+    function getSelectedNoteText() {
+        if (!selectedNoteId) return null;
+        const note = notesArray.find(n => n.id === selectedNoteId);
+        return note ? note.text : null;
+    }
+
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+
+    // ----------------------------- COPIA -----------------------------
+    function getItalianEmergencyText() {
+        const noteText = getSelectedNoteText() || "⚠️ Nessuna nota selezionata";
+        const coordText = (currentLat && currentLng && !isNaN(currentLat) && !isNaN(currentLng)) ? `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}` : "non disponibili";
+        const addrText = (currentAddress && currentAddress.trim() !== "") ? currentAddress : "non disponibile";
+        const refA = currentRefA || "non disponibile";
+        const refB = currentRefB || "non disponibile";
+        return `🚨 EMERGENZA ${currentService.toUpperCase()} 🚨\n\n📝 NOTA: ${noteText}\n\n📍 COORDINATE: ${coordText}\n🏠 INDIRIZZO: ${addrText}\n📍 RIFERIMENTO a: ${refA}\n📍 RIFERIMENTO b: ${refB}`;
+    }
+    async function copyItalianData() {
+        const text = getItalianEmergencyText();
+        try { await navigator.clipboard.writeText(text); gpsStatus.innerHTML = "📋 Copiato!"; setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 2000); } 
+        catch(e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); gpsStatus.innerHTML = "📋 Copiato manualmente!"; }
+    }
+
+    // ----------------------------- RICERCA DUE PUNTI DI INTERESSE (con distanza) -----------------------------
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // metri
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(Δφ/2)*Math.sin(Δφ/2) + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)*Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    async function fetchTwoNearbyPOI(lat, lng) {
+        // Tag considerati (escludiamo information, bench, waste_basket, toilets, telephone, recycling)
+        const query = `[out:json];(node(around:300,${lat},${lng})[amenity];node(around:300,${lat},${lng})[shop];node(around:300,${lat},${lng})[tourism];node(around:300,${lat},${lng})[office];node(around:300,${lat},${lng})[leisure];node(around:300,${lat},${lng})[historic];node(around:300,${lat},${lng})[place=square];way(around:300,${lat},${lng})[amenity];way(around:300,${lat},${lng})[shop];way(around:300,${lat},${lng})[place=square];);out center;`;
+        const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!data.elements || data.elements.length === 0) return ["Nessun riferimento nelle vicinanze", ""];
+            const excludeTags = ["information", "bench", "waste_basket", "toilets", "telephone", "recycling"];
+            const elementsWithCoords = [];
+            for (let el of data.elements) {
+                let latEl, lonEl;
+                if (el.type === "node") { latEl = el.lat; lonEl = el.lon; }
+                else if (el.center) { latEl = el.center.lat; lonEl = el.center.lon; }
+                else continue;
+                let tags = el.tags || {};
+                let cat = tags.amenity || tags.shop || tags.tourism || tags.office || tags.leisure || tags.historic || (tags.place === "square" ? "square" : null);
+                if (cat && excludeTags.includes(cat)) continue;
+                let name = tags.name || "";
+                let categoryMap = {
+                    "pharmacy":"Farmacia","hospital":"Ospedale","police":"Commissariato","post_office":"Ufficio Postale",
+                    "bank":"Banca","library":"Biblioteca","fire_station":"Caserma","townhall":"Municipio",
+                    "supermarket":"Supermercato","convenience":"Alimentari","cafe":"Bar","restaurant":"Ristorante",
+                    "pub":"Pub","fast_food":"Fast food","museum":"Museo","monument":"Monumento","attraction":"Attrazione",
+                    "square":"Piazza","garden":"Giardino","park":"Parco","bus_station":"Stazione bus","train_station":"Stazione ferroviaria"
+                };
+                let readable = categoryMap[cat] || (cat ? cat.charAt(0).toUpperCase()+cat.slice(1) : "Punto di interesse");
+                let display = name ? `${name} (${readable})` : readable;
+                let dist = haversineDistance(lat, lng, latEl, lonEl);
+                elementsWithCoords.push({ display, dist });
+            }
+            elementsWithCoords.sort((a,b) => a.dist - b.dist);
+            let refs = [];
+            for (let i=0; i<Math.min(2, elementsWithCoords.length); i++) {
+                let d = Math.round(elementsWithCoords[i].dist);
+                refs.push(`${elementsWithCoords[i].display} a ${d} metri`);
+            }
+            while (refs.length < 2) refs.push("Nessun altro riferimento nelle vicinanze");
+            return refs;
+        } catch (err) {
+            console.warn(err);
+            return ["Errore ricerca riferimenti", "Errore ricerca riferimenti"];
+        }
+    }
+
+    // ----------------------------- GEOLOCALIZZAZIONE + DUE RIFERIMENTI -----------------------------
+    async function fetchAddressFromCoords(lat, lng) {
+        try {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=it`;
+            const response = await fetch(url, { headers: { 'User-Agent': 'SOSDrive-App/1.0' } });
+            const data = await response.json();
+            return data.display_name || "Indirizzo non trovato";
+        } catch (err) { return "Indirizzo non disponibile (errore connessione)"; }
+    }
+
+    async function updateUIWithLocation(lat, lng, address, refA, refB) {
+        currentLat = lat; currentLng = lng; currentAddress = address; currentRefA = refA; currentRefB = refB;
+        latLonDisplay.innerText = (lat && lng) ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "---";
+        addressDisplay.innerText = address || "---";
+        refADisplay.innerText = refA || "---";
+        refBDisplay.innerText = refB || "---";
+    }
+
+    async function getLocationAndAddress() {
+        if (!navigator.geolocation) { gpsStatus.innerHTML = "❌ Geolocalizzazione non supportata."; return; }
+        gpsStatus.innerHTML = "⏳ Richiesta posizione...";
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude, lng = position.coords.longitude;
+            gpsStatus.innerHTML = "📍 Posizione acquisita, recupero indirizzo...";
+            const address = await fetchAddressFromCoords(lat, lng);
+            gpsStatus.innerHTML = "🔍 Ricerca due punti di interesse entro 300 m...";
+            const [ref1, ref2] = await fetchTwoNearbyPOI(lat, lng);
+            await updateUIWithLocation(lat, lng, address, ref1, ref2);
+            gpsStatus.innerHTML = "✅ Posizione, indirizzo e riferimenti aggiornati!";
+            setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 3000);
+        }, (error) => { gpsStatus.innerHTML = `❌ Errore GPS: ${error.message}`; });
+    }
+
+    function resetCoordinates() { 
+        currentLat = null; currentLng = null; currentAddress = ""; currentRefA = ""; currentRefB = "";
+        latLonDisplay.innerText = "---"; addressDisplay.innerText = "---"; refADisplay.innerText = "---"; refBDisplay.innerText = "---";
+        gpsStatus.innerHTML = "";
+    }
+
+    // ----------------------------- SUONO BIP (Web Audio) -----------------------------
+    function playBeep() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = 880;
+            gainNode.gain.value = 0.3;
+            oscillator.type = "sine";
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            oscillator.stop(audioCtx.currentTime + 0.5);
+            audioCtx.resume();
+        } catch(e) { console.warn("beep fallito", e); }
+    }
+
+    // ----------------------------- LETTURA VOCALE CON TESTA/BIP/AVVIO ASCOLTO -----------------------------
+    const RATE_NORMAL = 0.8;   // ridotto del 20% rispetto a 1.0
+    const RATE_SPELL = 0.6;
+
+    async function speakWithThreeSecondPause(text, langCode) {
+        if (!text || text === "") return;
+        const synth = window.speechSynthesis;
+        const chars = text.split('');
+        for (let i = 0; i < chars.length; i++) {
+            let char = chars[i];
+            let wordToSpeak = null;
+            if (char === '.') wordToSpeak = "punto";
+            else if (char === ',') wordToSpeak = "virgola";
+            else if (char === ' ') continue;
+            else wordToSpeak = char;
+            const utterance = new SpeechSynthesisUtterance(wordToSpeak);
+            utterance.lang = langCode;
+            utterance.rate = RATE_SPELL;
+            synth.speak(utterance);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+    }
+
+    async function speakWithHeaderFooter(lang, autoStartListening = true) {
+        if (!window.speechSynthesis) { alert(lang === 'it' ? "Sintesi non supportata" : "Synthèse non supportée"); return; }
+        const synth = window.speechSynthesis;
+        synth.cancel();
+
+        let noteText = getSelectedNoteText() || (lang === 'it' ? "nessuna nota selezionata" : "aucune note sélectionnée");
+        let addressText = (currentAddress && currentAddress.trim() !== "") ? currentAddress : (lang === 'it' ? "non disponibile" : "non disponible");
+        let refAText = currentRefA || (lang === 'it' ? "non disponibile" : "non disponible");
+        let refBText = currentRefB || (lang === 'it' ? "non disponibile" : "non disponible");
+        let coordValue = (currentLat && currentLng && !isNaN(currentLat) && !isNaN(currentLng)) 
+            ? `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}` 
+            : (lang === 'it' ? "non disponibili" : "non disponibles");
+        
+        if (lang === 'fr') {
+            gpsStatus.innerHTML = "⏳ Traduzione in francese...";
+            noteText = await translateToFrench(noteText);
+            if (currentAddress && currentAddress.trim() !== "" && currentAddress !== "non disponibile") addressText = await translateToFrench(currentAddress);
+            if (currentRefA && currentRefA !== "non disponibile") refAText = await translateToFrench(currentRefA);
+            if (currentRefB && currentRefB !== "non disponibile") refBText = await translateToFrench(currentRefB);
+            gpsStatus.innerHTML = "🔊 Lettura FR (testa+nota+bip+avvio ascolto)...";
+        } else {
+            gpsStatus.innerHTML = "🔊 Lettura IT (testa+nota+bip+avvio ascolto)...";
+        }
+
+        const testa = (lang === 'it') 
+            ? "SONO ITALIANO, QUESTO E' UN MESSAGGIO REGISTRATO DI EMERGENZA." 
+            : "JE SUIS ITALIEN, CECI EST UN MESSAGE D'URGENCE ENREGISTRÉ.";
+        const testaUtterance = new SpeechSynthesisUtterance(testa);
+        testaUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        testaUtterance.rate = RATE_NORMAL;
+        synth.speak(testaUtterance);
+        await new Promise(resolve => testaUtterance.onend = resolve);
+        
+        const noteUtterance = new SpeechSynthesisUtterance(noteText);
+        noteUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        noteUtterance.rate = RATE_NORMAL;
+        synth.speak(noteUtterance);
+        await new Promise(resolve => noteUtterance.onend = resolve);
+        
+        const coordLabel = (lang === 'it') ? "Coordinate" : "Coordonnées";
+        const labelUt = new SpeechSynthesisUtterance(coordLabel);
+        labelUt.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        labelUt.rate = RATE_NORMAL;
+        synth.speak(labelUt);
+        await new Promise(resolve => labelUt.onend = resolve);
+        
+        if (coordValue !== "non disponibili" && coordValue !== "non disponibles") {
+            await speakWithThreeSecondPause(coordValue, (lang === 'it' ? 'it-IT' : 'fr-FR'));
+        } else {
+            const fallback = new SpeechSynthesisUtterance(coordValue);
+            fallback.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+            fallback.rate = RATE_NORMAL;
+            synth.speak(fallback);
+            await new Promise(resolve => fallback.onend = resolve);
+        }
+        
+        const addrLabel = (lang === 'it') ? "Indirizzo" : "Adresse";
+        const addrL = new SpeechSynthesisUtterance(addrLabel);
+        addrL.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        addrL.rate = RATE_NORMAL;
+        synth.speak(addrL);
+        await new Promise(resolve => addrL.onend = resolve);
+        
+        const addrV = new SpeechSynthesisUtterance(addressText);
+        addrV.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        addrV.rate = RATE_NORMAL;
+        synth.speak(addrV);
+        await new Promise(resolve => addrV.onend = resolve);
+        
+        const refLabel = (lang === 'it') ? "Riferimenti" : "Points de repère";
+        const refL = new SpeechSynthesisUtterance(refLabel);
+        refL.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        refL.rate = RATE_NORMAL;
+        synth.speak(refL);
+        await new Promise(resolve => refL.onend = resolve);
+        
+        const refAmsg = (lang === 'it') ? `Primo riferimento: ${refAText}` : `Premier point: ${refAText}`;
+        const refAutt = new SpeechSynthesisUtterance(refAmsg);
+        refAutt.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        refAutt.rate = RATE_NORMAL;
+        synth.speak(refAutt);
+        await new Promise(resolve => refAutt.onend = resolve);
+        
+        const refBmsg = (lang === 'it') ? `Secondo riferimento: ${refBText}` : `Deuxième point: ${refBText}`;
+        const refButt = new SpeechSynthesisUtterance(refBmsg);
+        refButt.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        refButt.rate = RATE_NORMAL;
+        synth.speak(refButt);
+        await new Promise(resolve => refButt.onend = resolve);
+        
+        // BIP e frase HO CAPITO
+        playBeep();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const hoCapito = (lang === 'it') ? "HO CAPITO" : "J'AI COMPRIS";
+        const capitoUtterance = new SpeechSynthesisUtterance(hoCapito);
+        capitoUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        capitoUtterance.rate = RATE_NORMAL;
+        synth.speak(capitoUtterance);
+        await new Promise(resolve => capitoUtterance.onend = resolve);
+        
+        gpsStatus.innerHTML = "✅ Messaggio completo. Avvio ascolto operatore...";
+        if (autoStartListening) {
+            setTimeout(() => { startListening(); }, 500);
+        }
+    }
+    function speakItalian() { speakWithHeaderFooter('it', true); }
+    function speakFrench() { speakWithHeaderFooter('fr', true); }
+
+    // ----------------------------- EXPORT/IMPORT TXT -----------------------------
+    function exportNotesToTxt() {
+        if (notesArray.length === 0) { gpsStatus.innerHTML = "⚠️ Nessuna nota."; return; }
+        let txt = notesArray.map(n => n.text).join('\n');
+        const blob = new Blob([txt], { type: "text/plain" });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sos_notes_${currentService}.txt`; a.click(); URL.revokeObjectURL(a.href);
+        gpsStatus.innerHTML = `📁 Esportate ${notesArray.length} note.`;
+    }
+    function importNotesFromTxt(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const lines = e.target.result.split(/\r?\n/);
+            const newNotes = [];
+            lines.forEach(line => { line = line.trim(); if (line) newNotes.push({ id: Date.now() + Math.random() * 10000 + newNotes.length, text: line }); });
+            if (newNotes.length) { notesArray = newNotes; selectedNoteId = notesArray[0].id; saveNotesForCurrentService(); renderNotesList(); gpsStatus.innerHTML = `✅ Importate ${notesArray.length} note.`; }
+            else gpsStatus.innerHTML = "❌ Nessuna nota valida.";
+        };
+        reader.readAsText(file, "UTF-8");
+    }
+
+    // ----------------------------- UTILITIES -----------------------------
+    function loadCounter() { let s = localStorage.getItem(`sos_counter_${CURRENT_VERSION}`); return s ? parseInt(s) : 1; }
+    function incrementAndGet() { let c = loadCounter(); localStorage.setItem(`sos_counter_${CURRENT_VERSION}`, (c+1).toString()); return c; }
+    function savePhoneNumber(s, n) { localStorage.setItem(`phone_${s}_${CURRENT_VERSION}`, n); }
+    function getSavedPhoneNumber(s) { return localStorage.getItem(`phone_${s}_${CURRENT_VERSION}`); }
+    const defaultPhone = { ambulanza: "118", polizia: "113", veterinario: "800123456", clinica: "800987654" };
+    function showEmergencyScreen(s) {
+        currentService = s; let newId = incrementAndGet(); let label = { ambulanza:"🚑 AMBULANZA", polizia:"👮 POLIZIA", veterinario:"🐾 VETERINARIO", clinica:"🏥 CLINICA" }[s];
+        serviceTitleSpan.innerText = label;
+        phoneInput.value = getSavedPhoneNumber(s) || defaultPhone[s];
+        loadNotesForService(s); resetCoordinates();
+        homePage.classList.add("hidden"); emergencyPage.classList.remove("hidden");
+        phoneSaveMsg.innerText = "";
+    }
+    function onPhoneNumberChange() { let n = phoneInput.value.trim(); if (n) { savePhoneNumber(currentService, n); phoneSaveMsg.innerText = "✅ Numero salvato"; setTimeout(() => phoneSaveMsg.innerText = "", 2000); } }
+    function backToHome() { emergencyPage.classList.add("hidden"); homePage.classList.remove("hidden"); currentService = null; notesArray = []; selectedNoteId = null; renderNotesList(); editNoteArea.style.display = 'none'; }
+
+    // ----------------------------- INIT -----------------------------
+    function init() {
+        migrateFromPreviousVersions();
+        document.querySelectorAll('.big-btn').forEach(btn => btn.addEventListener('click', () => showEmergencyScreen(btn.getAttribute('data-service'))));
+        callBtn.addEventListener('click', () => { let p = phoneInput.value.trim(); if(p) window.location.href = `tel:${p.replace(/\s/g, '')}`; else alert("Inserisci numero"); });
+        googleMapsBtn.addEventListener('click', () => window.open("https://maps.google.com", "_blank"));
+        geolocationBtn.addEventListener('click', getLocationAndAddress);
+        addNoteBtn.addEventListener('click', addNote);
+        copyBtn.addEventListener('click', copyItalianData);
+        audioItBtn.addEventListener('click', speakItalian);
+        audioFrBtn.addEventListener('click', speakFrench);
+        backHomeBtn.addEventListener('click', backToHome);
+        phoneInput.addEventListener('change', onPhoneNumberChange);
+        phoneInput.addEventListener('input', onPhoneNumberChange);
+        exportNotesBtn.addEventListener('click', exportNotesToTxt);
+        importNotesBtn.addEventListener('click', () => importFileInput.click());
+        importFileInput.addEventListener('change', (e) => { if (e.target.files.length) importNotesFromTxt(e.target.files[0]); importFileInput.value = ''; });
+        saveNoteEditBtn.addEventListener('click', saveCurrentEdit);
+        cancelNoteEditBtn.addEventListener('click', cancelEdit);
+        listenResponseBtn.addEventListener('click', startListening);
+        clearResponseBtn.addEventListener('click', () => { operatorResponse.value = ""; transcribeStatus.innerText = ""; });
+        initSpeechRecognition();
+        currentService = null; notesArray = []; selectedNoteId = null; renderNotesList();
+    }
+    init();
+</script>
+</body>
+</html>
