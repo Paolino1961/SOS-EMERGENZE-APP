@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SOS Drive - Emergenza (v0030 - doppio riferimento, bip, avvio ascolto)</title>
+    <title>SOS Drive - Emergenza (v0032 - copia bilingue, fix voce)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -206,7 +206,7 @@
 <body>
 <div class="container">
     <div id="homePage" class="page">
-        <div class="version-header">📟 SOS Drive - Versione 0030 (doppio riferimento, bip, ascolto automatico) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0032 (copia bilingue, fix voce) | HTML</div>
         <h1>🆘 SOS EMERGENZA</h1>
         <div class="grid-2">
             <button class="big-btn" data-service="ambulanza">🚑 AMBULANZA</button>
@@ -214,12 +214,12 @@
             <button class="big-btn" data-service="veterinario">🐾 VETERINARIO</button>
             <button class="big-btn" data-service="clinica">🏥 CLINICA</button>
         </div>
-        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Due riferimenti con distanza (es. “Ristorante X a 250 m”).<br>🔊 Lettura normale (velocità 0.8), coordinate con pausa 3 secondi.<br>🔔 Alla fine della lettura: bip + “HO CAPITO” + avvio automatico ascolto operatore.</p>
-        <div class="version-footer">versione 0030 - Doppio POI, lettura 0.8, pausa 3s, bip, avvio ascolto.</div>
+        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Due riferimenti con distanza.<br>🔊 Copia bilingue (FR+IT) con testa, nota, coordinate, riferimenti, domanda.<br>🔔 Lettura IT/FR corretta (testa+nota+coordinate pausa 2s+indirizzo+riferimenti+domanda+bip+ascolto).</p>
+        <div class="version-footer">versione 0032 - Copia in francese+italiano, voce funzionante, pausa 2 secondi coordinate.</div>
     </div>
 
     <div id="emergencyPage" class="page hidden">
-        <div class="version-header">📟 SOS Drive - Versione 0030 (doppio riferimento, ascolto automatico) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0032 (copia bilingue, voce ok) | HTML</div>
         <div class="flex-between">
             <h2 id="serviceTitle">AMBULANZA</h2>
             <span id="emergencyIdBadge" class="id-badge"></span>
@@ -277,33 +277,37 @@
         </div>
 
         <div class="flex-row">
-            <button id="copyBtn" class="small-btn btn-copy" style="flex:1;">📋 COPIA (IT)</button>
+            <button id="copyBtn" class="small-btn btn-copy" style="flex:1;">📋 COPIA (FR+IT)</button>
             <button id="audioItBtn" class="small-btn btn-audio" style="flex:1;">🔊 LEGGI IT</button>
             <button id="audioFrBtn" class="small-btn btn-audio" style="flex:1;">🔊 LEGGI FR</button>
         </div>
 
         <button id="backHomeBtn" class="small-btn back-home" style="width:100%; margin-top:24px;">◀ TORNA INDIETRO</button>
-        <div class="version-footer">versione 0030 - Due riferimenti, lettura 0.8, pausa 3s, bip, avvio ascolto automatico.</div>
+        <div class="version-footer">versione 0032 - Copia bilingue, voce funzionante, pausa 2 secondi coordinate.</div>
     </div>
 </div>
 
 <script>
-    // ========================= VERSIONE 0030 =========================
+    // ========================= VERSIONE 0032 =========================
     // MODIFICHE:
-    // 1) Due punti di interesse (RIFERIMENTO a e b) con distanza in metri, esclusi tag poco utili.
-    // 2) Velocità di lettura normale ridotta al 20% (0.8), spell per coordinate a 0.6, pausa 3 secondi tra caratteri.
-    // 3) Testa messaggio: "SONO ITALIANO, QUESTO E' UN MESSAGGIO REGISTRATO DI EMERGENZA, ..." + nota selezionata.
-    //    Piedi: dopo il bip (suono generato con Web Audio) pronuncia "HO CAPITO".
-    // 4) Al termine della lettura (dopo bip e "HO CAPITO") si avvia automaticamente il riconoscimento vocale (ascolta risposta operatore).
-    // 5) Tutti i tasti rimangono attivi.
+    // 1) Tasto COPIA: genera testo bilingue (prima FRANCESE, poi ITALIANO) comprendente:
+    //    - testa del messaggio ("SONO ITALIANO...")
+    //    - nota selezionata
+    //    - coordinate, indirizzo, due riferimenti
+    //    - domanda finale ("hai CAPITO dove mi trovo? ...")
+    //    - viene aggiunto un bip simbolico nel testo (🔔)
+    // 2) Corretti i tasti LEGGI IT e LEGGI FR (la sintesi vocale ora funziona correttamente)
+    //    - velocità 0.8 per la parte normale, 0.6 per lo spelling coordinate
+    //    - pausa di 2 secondi tra i caratteri delle coordinate
+    //    - dopo la domanda, bip reale e avvio automatico dell'ascolto operatore
     // =================================================================
 
-    const CURRENT_VERSION = "0030";
+    const CURRENT_VERSION = "0032";
     let currentService = "ambulanza";
     let currentLat = null, currentLng = null;
     let currentAddress = "";
-    let currentRefA = "";   // primo riferimento (più vicino)
-    let currentRefB = "";   // secondo riferimento
+    let currentRefA = "";
+    let currentRefB = "";
     let notesArray = [];
     let selectedNoteId = null;
 
@@ -410,7 +414,7 @@
     // ----------------------------- GESTIONE NOTE -----------------------------
     function migrateFromPreviousVersions() {
         const services = ["ambulanza", "polizia", "veterinario", "clinica"];
-        const oldVersions = ["0029", "0028", "0027"];
+        const oldVersions = ["0031", "0030", "0029"];
         for (let service of services) {
             const currentKey = `sos_notes_${service}_${CURRENT_VERSION}`;
             if (localStorage.getItem(currentKey)) continue;
@@ -549,24 +553,58 @@
 
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
-    // ----------------------------- COPIA -----------------------------
-    function getItalianEmergencyText() {
-        const noteText = getSelectedNoteText() || "⚠️ Nessuna nota selezionata";
+    // ----------------------------- GENERAZIONE TESTO BILINGUE PER COPIA -----------------------------
+    async function getBilingualCopyText() {
+        const noteIT = getSelectedNoteText() || "nessuna nota selezionata";
         const coordText = (currentLat && currentLng && !isNaN(currentLat) && !isNaN(currentLng)) ? `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}` : "non disponibili";
         const addrText = (currentAddress && currentAddress.trim() !== "") ? currentAddress : "non disponibile";
-        const refA = currentRefA || "non disponibile";
-        const refB = currentRefB || "non disponibile";
-        return `🚨 EMERGENZA ${currentService.toUpperCase()} 🚨\n\n📝 NOTA: ${noteText}\n\n📍 COORDINATE: ${coordText}\n🏠 INDIRIZZO: ${addrText}\n📍 RIFERIMENTO a: ${refA}\n📍 RIFERIMENTO b: ${refB}`;
+        const refAText = currentRefA || "non disponibile";
+        const refBText = currentRefB || "non disponibile";
+        
+        // Testa
+        const testaIT = "SONO ITALIANO, QUESTO E' UN MESSAGGIO REGISTRATO DI EMERGENZA.";
+        // Domanda finale
+        const domandaIT = "hai CAPITO dove mi trovo? se si pronuncia, HO CAPITO, OPPURE pronuncia, RIPETI dopo il bip.";
+        
+        // Traduzioni in francese
+        const testaFR = await translateToFrench(testaIT);
+        const noteFR = await translateToFrench(noteIT);
+        const coordFR = coordText === "non disponibili" ? "non disponibles" : coordText; // le coordinate non tradotte
+        const addrFR = addrText === "non disponibile" ? "non disponible" : await translateToFrench(addrText);
+        const refAFR = refAText === "non disponibile" ? "non disponible" : await translateToFrench(refAText);
+        const refBFR = refBText === "non disponibile" ? "non disponible" : await translateToFrench(refBText);
+        const domandaFR = await translateToFrench(domandaIT);
+        
+        // Costruzione messaggio francese
+        const frenchMsg = `${testaFR}\n\n${noteFR}\n\nCoordonnées: ${coordFR}\nAdresse: ${addrFR}\nPoint de repère a: ${refAFR}\nPoint de repère b: ${refBFR}\n\n${domandaFR} 🔔`;
+        
+        // Messaggio italiano
+        const italianMsg = `${testaIT}\n\n${noteIT}\n\nCoordinate: ${coordText}\nIndirizzo: ${addrText}\nRiferimento a: ${refAText}\nRiferimento b: ${refBText}\n\n${domandaIT} 🔔`;
+        
+        return `${frenchMsg}\n\n-----\n\n${italianMsg}`;
     }
-    async function copyItalianData() {
-        const text = getItalianEmergencyText();
-        try { await navigator.clipboard.writeText(text); gpsStatus.innerHTML = "📋 Copiato!"; setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 2000); } 
-        catch(e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); gpsStatus.innerHTML = "📋 Copiato manualmente!"; }
+    
+    async function copyBilingualData() {
+        gpsStatus.innerHTML = "⏳ Generazione testo bilingue...";
+        const textToCopy = await getBilingualCopyText();
+        try {
+            await navigator.clipboard.writeText(textToCopy);
+            gpsStatus.innerHTML = "📋 Copiato (FR + IT)!";
+            setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 2000);
+        } catch(e) {
+            const ta = document.createElement('textarea');
+            ta.value = textToCopy;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            gpsStatus.innerHTML = "📋 Copiato manualmente!";
+        }
     }
 
     // ----------------------------- RICERCA DUE PUNTI DI INTERESSE (con distanza) -----------------------------
     function haversineDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // metri
+        const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
         const φ2 = lat2 * Math.PI/180;
         const Δφ = (lat2-lat1) * Math.PI/180;
@@ -577,7 +615,6 @@
     }
 
     async function fetchTwoNearbyPOI(lat, lng) {
-        // Tag considerati (escludiamo information, bench, waste_basket, toilets, telephone, recycling)
         const query = `[out:json];(node(around:300,${lat},${lng})[amenity];node(around:300,${lat},${lng})[shop];node(around:300,${lat},${lng})[tourism];node(around:300,${lat},${lng})[office];node(around:300,${lat},${lng})[leisure];node(around:300,${lat},${lng})[historic];node(around:300,${lat},${lng})[place=square];way(around:300,${lat},${lng})[amenity];way(around:300,${lat},${lng})[shop];way(around:300,${lat},${lng})[place=square];);out center;`;
         const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
         try {
@@ -660,7 +697,7 @@
         gpsStatus.innerHTML = "";
     }
 
-    // ----------------------------- SUONO BIP (Web Audio) -----------------------------
+    // ----------------------------- SUONO BIP -----------------------------
     function playBeep() {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -678,11 +715,11 @@
         } catch(e) { console.warn("beep fallito", e); }
     }
 
-    // ----------------------------- LETTURA VOCALE CON TESTA/BIP/AVVIO ASCOLTO -----------------------------
-    const RATE_NORMAL = 0.8;   // ridotto del 20% rispetto a 1.0
+    // ----------------------------- LETTURA VOCALE CORRETTA -----------------------------
+    const RATE_NORMAL = 0.8;
     const RATE_SPELL = 0.6;
 
-    async function speakWithThreeSecondPause(text, langCode) {
+    async function speakWithTwoSecondPause(text, langCode) {
         if (!text || text === "") return;
         const synth = window.speechSynthesis;
         const chars = text.split('');
@@ -697,11 +734,11 @@
             utterance.lang = langCode;
             utterance.rate = RATE_SPELL;
             synth.speak(utterance);
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
 
-    async function speakWithHeaderFooter(lang, autoStartListening = true) {
+    async function speakCompleteMessage(lang, autoStartListening = true) {
         if (!window.speechSynthesis) { alert(lang === 'it' ? "Sintesi non supportata" : "Synthèse non supportée"); return; }
         const synth = window.speechSynthesis;
         synth.cancel();
@@ -720,9 +757,9 @@
             if (currentAddress && currentAddress.trim() !== "" && currentAddress !== "non disponibile") addressText = await translateToFrench(currentAddress);
             if (currentRefA && currentRefA !== "non disponibile") refAText = await translateToFrench(currentRefA);
             if (currentRefB && currentRefB !== "non disponibile") refBText = await translateToFrench(currentRefB);
-            gpsStatus.innerHTML = "🔊 Lettura FR (testa+nota+bip+avvio ascolto)...";
+            gpsStatus.innerHTML = "🔊 Lettura FR (testa+nota+coordinate pausa 2s+indirizzo+riferimenti+domanda+bip+ascolto)...";
         } else {
-            gpsStatus.innerHTML = "🔊 Lettura IT (testa+nota+bip+avvio ascolto)...";
+            gpsStatus.innerHTML = "🔊 Lettura IT (testa+nota+coordinate pausa 2s+indirizzo+riferimenti+domanda+bip+ascolto)...";
         }
 
         const testa = (lang === 'it') 
@@ -748,7 +785,7 @@
         await new Promise(resolve => labelUt.onend = resolve);
         
         if (coordValue !== "non disponibili" && coordValue !== "non disponibles") {
-            await speakWithThreeSecondPause(coordValue, (lang === 'it' ? 'it-IT' : 'fr-FR'));
+            await speakWithTwoSecondPause(coordValue, (lang === 'it' ? 'it-IT' : 'fr-FR'));
         } else {
             const fallback = new SpeechSynthesisUtterance(coordValue);
             fallback.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
@@ -791,23 +828,27 @@
         synth.speak(refButt);
         await new Promise(resolve => refButt.onend = resolve);
         
-        // BIP e frase HO CAPITO
+        // Domanda finale
+        const domanda = (lang === 'it')
+            ? "hai CAPITO dove mi trovo? se si pronuncia, HO CAPITO, OPPURE pronuncia, RIPETI dopo il bip."
+            : "avez-vous COMPRIS où je me trouve? si oui, dites J'AI COMPRIS, sinon dites RÉPÉTEZ après le bip.";
+        const domandaUtterance = new SpeechSynthesisUtterance(domanda);
+        domandaUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
+        domandaUtterance.rate = RATE_NORMAL;
+        synth.speak(domandaUtterance);
+        await new Promise(resolve => domandaUtterance.onend = resolve);
+        
+        // Bip
         playBeep();
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const hoCapito = (lang === 'it') ? "HO CAPITO" : "J'AI COMPRIS";
-        const capitoUtterance = new SpeechSynthesisUtterance(hoCapito);
-        capitoUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        capitoUtterance.rate = RATE_NORMAL;
-        synth.speak(capitoUtterance);
-        await new Promise(resolve => capitoUtterance.onend = resolve);
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         gpsStatus.innerHTML = "✅ Messaggio completo. Avvio ascolto operatore...";
         if (autoStartListening) {
             setTimeout(() => { startListening(); }, 500);
         }
     }
-    function speakItalian() { speakWithHeaderFooter('it', true); }
-    function speakFrench() { speakWithHeaderFooter('fr', true); }
+    function speakItalian() { speakCompleteMessage('it', true); }
+    function speakFrench() { speakCompleteMessage('fr', true); }
 
     // ----------------------------- EXPORT/IMPORT TXT -----------------------------
     function exportNotesToTxt() {
@@ -854,7 +895,7 @@
         googleMapsBtn.addEventListener('click', () => window.open("https://maps.google.com", "_blank"));
         geolocationBtn.addEventListener('click', getLocationAndAddress);
         addNoteBtn.addEventListener('click', addNote);
-        copyBtn.addEventListener('click', copyItalianData);
+        copyBtn.addEventListener('click', copyBilingualData);
         audioItBtn.addEventListener('click', speakItalian);
         audioFrBtn.addEventListener('click', speakFrench);
         backHomeBtn.addEventListener('click', backToHome);
