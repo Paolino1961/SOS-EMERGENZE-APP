@@ -1,87 +1,138 @@
-Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 s)** tra una parola e l’altra durante la lettura del messaggio, come richiesto. Tutte le altre funzionalità (media GPS, map matching, tre riferimenti, copia bilingue, avvio automatico ascolto) sono mantenute e funzionanti.
+Ecco la versione **v0036** ottimizzata per dispositivi mobili, con modifiche CSS per migliorare la visualizzazione su schermi piccoli (pulsanti compatti, testo adattato, evitare overflow). Tutte le funzionalità JavaScript rimangono identiche.
 
 ```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SOS Drive - Emergenza (v0036 - media GPS + map matching, pausa 0.5s)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>SOS Drive - Emergenza (v0036 - mobile ottimizzato)</title>
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
             background: #f7f7f7;
             margin: 0;
-            padding: 20px;
+            padding: 12px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .container { max-width: 600px; width: 100%; margin: auto; }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: auto;
+        }
         .page {
             background: white;
-            border-radius: 32px;
-            padding: 24px 20px 32px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            border-radius: 28px;
+            padding: 20px 16px 28px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
         }
-        .hidden { display: none; }
-        h1, h2 { margin-top: 0; text-align: center; color: #d32f2f; }
+        .hidden {
+            display: none;
+        }
+        h1, h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #d32f2f;
+            font-size: 1.6rem;
+            word-break: break-word;
+        }
         .version-header {
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #888;
             margin-bottom: 12px;
             border-bottom: 1px solid #ddd;
             padding-bottom: 6px;
         }
-        .grid-2 { display: flex; flex-direction: column; gap: 16px; margin: 24px 0; }
+        .grid-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
         .big-btn {
             background: #d32f2f;
             border: none;
-            border-radius: 60px;
-            padding: 18px;
-            font-size: 1.6rem;
+            border-radius: 48px;
+            padding: 14px 12px;
+            font-size: 1.3rem;
             font-weight: bold;
             color: white;
+            width: 100%;
+            text-align: center;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             transition: transform 0.05s linear;
+            white-space: normal;
+            word-break: break-word;
         }
-        .big-btn:active { transform: scale(0.97); }
-        .btn-secondary { background: #2196f3; }
-        .btn-copy { background: #ff9800; }
-        .btn-audio { background: #9c27b0; }
-        .btn-gps { background: #4caf50; }
+        .big-btn:active {
+            transform: scale(0.97);
+        }
+        .btn-secondary {
+            background: #2196f3;
+        }
+        .btn-copy {
+            background: #ff9800;
+        }
+        .btn-audio {
+            background: #9c27b0;
+        }
+        .btn-gps {
+            background: #2e7d32;
+        }
         .small-btn {
-            padding: 12px 16px;
-            font-size: 1rem;
+            padding: 10px 14px;
+            font-size: 0.9rem;
             border-radius: 40px;
             border: none;
             font-weight: bold;
             cursor: pointer;
             color: white;
-            margin: 6px 0;
+            margin: 4px 0;
+            white-space: normal;
+            word-break: break-word;
+            flex: 1;
+            text-align: center;
         }
-        .flex-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
         input, textarea {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border-radius: 28px;
             border: 1px solid #ccc;
-            font-size: 1rem;
+            font-size: 0.95rem;
             background: #fefefe;
-            margin: 8px 0;
+            margin: 6px 0;
             font-family: monospace;
         }
         .info-card {
             background: #f0f0f0;
             border-radius: 24px;
-            padding: 14px;
-            margin: 16px 0;
+            padding: 12px;
+            margin: 14px 0;
             word-break: break-word;
+            font-size: 0.9rem;
         }
         .note-item {
             background: #faf0e6;
@@ -90,54 +141,113 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             border-radius: 40px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
         }
-        .note-text { flex: 1; font-size: 0.9rem; word-break: break-word; }
+        .note-text {
+            flex: 1;
+            font-size: 0.85rem;
+            word-break: break-word;
+        }
         .delete-note {
             background: #e57373;
             border: none;
             border-radius: 30px;
-            padding: 6px 12px;
+            padding: 5px 12px;
             color: white;
             font-weight: bold;
             cursor: pointer;
+            font-size: 0.8rem;
         }
-        .radio-note { transform: scale(1.2); margin-right: 6px; }
+        .radio-note {
+            transform: scale(1.1);
+            margin-right: 4px;
+        }
         .edit-note-area {
             background: #fff8e1;
-            border-radius: 24px;
-            padding: 12px;
-            margin: 12px 0;
+            border-radius: 20px;
+            padding: 10px;
+            margin: 10px 0;
         }
-        .edit-note-area label { font-weight: bold; font-size: 0.9rem; }
-        .back-home { background: #607d8b; margin-top: 16px; }
-        .status-msg { font-size: 0.8rem; color: #2c3e66; margin-top: 8px; }
-        button:active { transform: scale(0.97); }
-        .id-badge { display: none; }
+        .edit-note-area label {
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        .back-home {
+            background: #607d8b;
+            margin-top: 16px;
+        }
+        .status-msg {
+            font-size: 0.75rem;
+            color: #2c3e66;
+            margin-top: 6px;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        .id-badge {
+            display: none;
+        }
         .version-footer {
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #aaa;
-            margin-top: 20px;
+            margin-top: 18px;
             border-top: 1px solid #eee;
-            padding-top: 12px;
+            padding-top: 10px;
         }
-        .import-export { display: flex; gap: 10px; margin-top: 10px; }
-        .import-export button { background: #607d8b; flex: 1; }
+        .import-export {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
         .response-area {
             background: #e8f0fe;
-            border-radius: 24px;
+            border-radius: 20px;
             padding: 12px;
-            margin: 20px 0 12px;
+            margin: 16px 0;
         }
-        .response-area textarea { background: #fff; margin: 8px 0; resize: vertical; }
+        .response-area textarea {
+            background: #fff;
+            margin: 6px 0;
+            font-size: 0.9rem;
+        }
+        /* Regole specifiche per schermi molto piccoli */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            .page {
+                padding: 16px 12px 20px;
+            }
+            .big-btn {
+                font-size: 1.2rem;
+                padding: 12px 10px;
+            }
+            .small-btn {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+            .flex-row {
+                gap: 8px;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+            h2 {
+                font-size: 1.3rem;
+            }
+            .info-card {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div id="homePage" class="page">
-        <div class="version-header">📟 SOS Drive - Versione 0036 (media GPS + map matching, pausa 0.5s) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0036 (mobile ottimizzato) | HTML</div>
         <h1>🆘 SOS EMERGENZA</h1>
         <div class="grid-2">
             <button class="big-btn" data-service="ambulanza">🚑 AMBULANZA</button>
@@ -145,12 +255,12 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             <button class="big-btn" data-service="veterinario">🐾 VETERINARIO</button>
             <button class="big-btn" data-service="clinica">🏥 CLINICA</button>
         </div>
-        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Media di 5 letture GPS + map matching (via e civico più precisi).<br>📋 Copia bilingue con messaggio personalizzato.<br>🔊 Lettura a velocità normale, pausa 0.5s tra parole, coordinate pausa 2s.</p>
-        <div class="version-footer">versione 0036 - Pausa lettura 0.5 secondi, media GPS, map matching.</div>
+        <p style="text-align:center; font-size:0.7rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Media di 5 letture GPS + map matching (via e civico precisi).<br>📋 Copia bilingue.<br>🔊 Lettura con pausa 0.5s tra parole.</p>
+        <div class="version-footer">versione 0036 - Layout adattato per smartphone, pausa 0.5s.</div>
     </div>
 
     <div id="emergencyPage" class="page hidden">
-        <div class="version-header">📟 SOS Drive - Versione 0036 (precisione migliorata) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0036 (mobile friendly) | HTML</div>
         <div class="flex-between">
             <h2 id="serviceTitle">AMBULANZA</h2>
             <span id="emergencyIdBadge" class="id-badge"></span>
@@ -164,7 +274,7 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
         <div id="phoneSaveMsg" class="status-msg"></div>
 
         <button id="googleMapsBtn" class="small-btn btn-secondary" style="width:100%;">🗺️ APRI GOOGLE MAPS</button>
-        <button id="geolocationBtn" class="small-btn btn-gps" style="width:100%; background:#2e7d32;">📍 CARICA POSIZIONE + INDIRIZZO</button>
+        <button id="geolocationBtn" class="small-btn btn-gps" style="width:100%;">📍 CARICA POSIZIONE + INDIRIZZO</button>
 
         <div id="coordsContainer" class="info-card">
             <div><strong>📌 COORDINATE:</strong> <span id="latLonDisplay">---</span></div>
@@ -176,25 +286,25 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
         </div>
 
         <div class="flex-row">
-            <input type="text" id="newNoteInput" placeholder="Es: NUOVA NOTA scrivi in italiano (es: Sanguinamento, necessito ambulanza)" style="flex:3;">
+            <input type="text" id="newNoteInput" placeholder="Es: NUOVA NOTA scrivi in italiano (es: Sanguinamento)" style="flex:3;">
             <button id="addNoteBtn" class="small-btn" style="background:#ff9800;">➕ AGGIUNGI</button>
         </div>
         <div id="notesListArea">
-            <div style="font-size:0.8rem; color:#777;">Nessuna nota. Aggiungine una, poi seleziona quella da usare.</div>
+            <div style="font-size:0.75rem; color:#777;">Nessuna nota. Aggiungine una.</div>
         </div>
 
         <div id="editNoteArea" class="edit-note-area" style="display:none;">
             <label>✏️ Modifica nota (italiano):</label>
             <textarea id="editNoteText" rows="2"></textarea>
             <div class="flex-row">
-                <button id="saveNoteEditBtn" class="small-btn" style="background:#4caf50;">💾 SALVA MODIFICHE</button>
+                <button id="saveNoteEditBtn" class="small-btn" style="background:#4caf50;">💾 SALVA</button>
                 <button id="cancelNoteEditBtn" class="small-btn" style="background:#9e9e9e;">ANNULLA</button>
             </div>
         </div>
 
         <div class="import-export">
-            <button id="exportNotesBtn" class="small-btn" style="background:#4caf50;">💾 ESPORTA NOTE (TXT)</button>
-            <button id="importNotesBtn" class="small-btn" style="background:#2196f3;">📂 IMPORTA NOTE (TXT)</button>
+            <button id="exportNotesBtn" class="small-btn" style="background:#4caf50;">💾 ESPORTA (TXT)</button>
+            <button id="importNotesBtn" class="small-btn" style="background:#2196f3;">📂 IMPORTA (TXT)</button>
             <input type="file" id="importFileInput" accept=".txt" style="display:none;">
         </div>
 
@@ -202,8 +312,8 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             <label>🎧 RISPOSTA DELL'OPERATORE TRADOTTA IN ITALIANO</label>
             <textarea id="operatorResponse" rows="3" placeholder="La traduzione in italiano apparirà qui" readonly></textarea>
             <div class="flex-row">
-                <button id="listenResponseBtn" class="small-btn" style="background:#3f51b5; flex:1;">🎤 ASCOLTA RISPOSTA OPERATORE E TRADUCI</button>
-                <button id="clearResponseBtn" class="small-btn" style="background:#757575; flex:0.5;">🗑️ Cancella</button>
+                <button id="listenResponseBtn" class="small-btn" style="background:#3f51b5; flex:1;">🎤 ASCOLTA OPERATORE</button>
+                <button id="clearResponseBtn" class="small-btn" style="background:#757575; flex:0.5;">🗑️</button>
             </div>
             <div id="transcribeStatus" class="status-msg"></div>
         </div>
@@ -214,18 +324,18 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             <button id="audioFrBtn" class="small-btn btn-audio" style="flex:1;">🔊 LEGGI FR</button>
         </div>
 
-        <button id="backHomeBtn" class="small-btn back-home" style="width:100%; margin-top:24px;">◀ TORNA INDIETRO</button>
-        <div class="version-footer">versione 0036 - Pausa di 0.5 secondi tra le parole, precisione con media GPS e map matching.</div>
+        <button id="backHomeBtn" class="small-btn back-home" style="width:100%; margin-top:20px;">◀ TORNA INDIETRO</button>
+        <div class="version-footer">versione 0036 - Pausa lettura 0.5s, media GPS, map matching, layout mobile.</div>
     </div>
 </div>
 
 <script>
     // ========================= VERSIONE 0036 =========================
-    // - Media di 5 letture GPS per ridurre l'errore.
-    // - Map matching: ricerca della via più vicina e proiezione delle coordinate sulla strada.
-    // - Terzo riferimento: via e numero civico più vicini (da Nominatim dopo map matching).
-    // - Pausa tra le parole nella lettura: 0.5 secondi (invece di 1 secondo).
-    // - Tutte le altre funzionalità (copia bilingue, avvio ascolto automatico, tre riferimenti) invariate.
+    // - Media di 5 letture GPS
+    // - Map matching (snap to nearest road)
+    // - Tre riferimenti con via/civico
+    // - Pausa lettura 0.5 secondi tra parole
+    // - Layout CSS ottimizzato per mobile
     // =================================================================
 
     const CURRENT_VERSION = "0036";
@@ -412,12 +522,12 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
 
     function renderNotesList() {
         if (notesArray.length === 0) {
-            notesListArea.innerHTML = `<div style="font-size:0.8rem; color:#777;">Nessuna nota. Aggiungine una.</div>`;
+            notesListArea.innerHTML = `<div style="font-size:0.75rem; color:#777;">Nessuna nota. Aggiungine una.</div>`;
             selectedNoteId = null;
             editNoteArea.style.display = 'none';
             return;
         }
-        let html = '<div style="margin-bottom:8px;"><strong>📋 Note disponibili (seleziona quella da usare):</strong></div>';
+        let html = '<div style="margin-bottom:6px;"><strong>📋 Note disponibili (seleziona quella da usare):</strong></div>';
         notesArray.forEach(note => {
             const isChecked = (selectedNoteId === note.id) ? 'checked' : '';
             html += `
@@ -526,7 +636,6 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
     }
 
     // ----------------------------- MAP MATCHING -----------------------------
-    // Trova la strada più vicina entro 50 metri e proietta la coordinata sulla linea stradale
     async function snapToNearestRoad(lat, lng) {
         const query = `[out:json];way(around:50,${lat},${lng})["highway"];out center;`;
         const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
@@ -534,11 +643,9 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             const response = await fetch(url);
             const data = await response.json();
             if (!data.elements || data.elements.length === 0) return { lat, lng, roadName: null };
-            // Prendi la via più vicina (prima nel risultato)
             const nearest = data.elements[0];
             let roadName = null;
             if (nearest.tags && nearest.tags.name) roadName = nearest.tags.name;
-            // Determina il centro della via (coordinate approssimate)
             let roadLat, roadLng;
             if (nearest.center) {
                 roadLat = nearest.center.lat;
@@ -549,10 +656,8 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             } else {
                 return { lat, lng, roadName };
             }
-            // Calcola la distanza tra il punto originale e il centro della via
             const dist = haversineDistance(lat, lng, roadLat, roadLng);
             if (dist < 50) {
-                // Se la via è abbastanza vicina, restituisci le coordinate della via (snappate)
                 return { lat: roadLat, lng: roadLng, roadName };
             }
             return { lat, lng, roadName };
@@ -562,7 +667,6 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
         }
     }
 
-    // ----------------------------- RICERCA DUE PUNTI DI INTERESSE -----------------------------
     function haversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
@@ -630,13 +734,10 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             let attempts = 0;
             let positions = [];
             const maxAttempts = 5;
-            const timeout = 15000; // 15 secondi totali
-            
             const success = (pos) => {
                 positions.push({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
                 attempts++;
                 if (attempts >= maxAttempts) {
-                    // Calcola la media
                     let sumLat = 0, sumLng = 0;
                     for (let p of positions) {
                         sumLat += p.lat;
@@ -646,14 +747,12 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
                     const avgLng = sumLng / positions.length;
                     resolve({ lat: avgLat, lng: avgLng });
                 } else {
-                    // Richiedi la prossima lettura
                     navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 5000 });
                 }
             };
             const error = (err) => {
                 console.warn("Errore GPS", err);
                 if (positions.length > 0) {
-                    // Se abbiamo almeno una lettura, usiamo quella
                     let sumLat = 0, sumLng = 0;
                     for (let p of positions) {
                         sumLat += p.lat;
@@ -670,7 +769,6 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
         });
     }
 
-    // ----------------------------- GEOLOCALIZZAZIONE + MEDIA + MAP MATCHING -----------------------------
     async function fetchAddressFromCoords(lat, lng) {
         try {
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=it`;
@@ -695,19 +793,17 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
         try {
             const avgPos = await getAveragePosition();
             gpsStatus.innerHTML = "📍 Posizione media calcolata. Perfezionamento con map matching...";
-            // Map matching: aggancia alla strada più vicina
             const snapped = await snapToNearestRoad(avgPos.lat, avgPos.lng);
             const finalLat = snapped.lat;
             const finalLng = snapped.lng;
-            gpsStatus.innerHTML = "📍 Posizione migliorata con map matching. Recupero indirizzo...";
+            gpsStatus.innerHTML = "📍 Posizione migliorata. Recupero indirizzo...";
             const address = await fetchAddressFromCoords(finalLat, finalLng);
-            gpsStatus.innerHTML = "🔍 Ricerca due punti di interesse entro 300 m...";
+            gpsStatus.innerHTML = "🔍 Ricerca due punti di interesse...";
             const [ref1, ref2] = await fetchTwoNearbyPOI(finalLat, finalLng);
-            // Terzo riferimento: via e numero civico dall'indirizzo (già migliorato)
             let ref3 = address.split(',')[0] + (address.split(',')[1] ? ', ' + address.split(',')[1] : '');
             if (ref3.length < 5) ref3 = "Via e numero civico non identificati";
             await updateUIWithLocation(finalLat, finalLng, address, ref1, ref2, ref3);
-            gpsStatus.innerHTML = "✅ Posizione, indirizzo e tre riferimenti aggiornati!";
+            gpsStatus.innerHTML = "✅ Posizione e riferimenti aggiornati!";
             setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 3000);
         } catch (err) {
             gpsStatus.innerHTML = `❌ Errore GPS: ${err.message}`;
@@ -747,7 +843,7 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             utterance.lang = langCode;
             utterance.rate = rate;
             window.speechSynthesis.speak(utterance);
-            await new Promise(resolve => setTimeout(resolve, 500)); // pausa 0.5 secondi
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
     }
 
@@ -790,9 +886,9 @@ Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 
             if (currentRefA && currentRefA !== "non disponibile") refAText = await translateToFrench(currentRefA);
             if (currentRefB && currentRefB !== "non disponibile") refBText = await translateToFrench(currentRefB);
             if (currentRefC && currentRefC !== "non disponibile") refCText = await translateToFrench(currentRefC);
-            gpsStatus.innerHTML = "🔊 Lettura FR (velocità normale, pausa 0.5s tra parole)...";
+            gpsStatus.innerHTML = "🔊 Lettura FR (pausa 0.5s)...";
         } else {
-            gpsStatus.innerHTML = "🔊 Lettura IT (velocità normale, pausa 0.5s tra parole)...";
+            gpsStatus.innerHTML = "🔊 Lettura IT (pausa 0.5s)...";
         }
 
         const intro = (lang === 'it') 
