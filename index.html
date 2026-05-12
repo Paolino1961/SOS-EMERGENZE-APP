@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SOS Drive - Emergenza (v0034 - solo italiano, POI puliti)</title>
+    <title>SOS Drive - Emergenza (v0035 - tre riferimenti con via, lettura lenta)</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -134,7 +134,7 @@
 <body>
 <div class="container">
     <div id="homePage" class="page">
-        <div class="version-header">📟 SOS Drive - Versione 0034 (punti di interesse puliti, solo italiano) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0035 (tre riferimenti con indirizzo) | HTML</div>
         <h1>🆘 SOS EMERGENZA</h1>
         <div class="grid-2">
             <button class="big-btn" data-service="ambulanza">🚑 AMBULANZA</button>
@@ -142,12 +142,12 @@
             <button class="big-btn" data-service="veterinario">🐾 VETERINARIO</button>
             <button class="big-btn" data-service="clinica">🏥 CLINICA</button>
         </div>
-        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Due riferimenti significativi (esclusi fontane, panchine, ecc.).<br>📋 Copia bilingue (FR+IT) nel formato richiesto.<br>🔊 Lettura IT/FR funzionante su mobile e web.</p>
-        <div class="version-footer">versione 0034 - POI solo luoghi utili (ristoranti, piazze, farmacie, uffici, supermercati, stazioni, monumenti).</div>
+        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Tre riferimenti (due POI + via e civico più vicino).<br>📋 Copia bilingue con messaggio personalizzato.<br>🔊 Lettura a velocità normale, pausa 1s tra parole, coordinate pausa 2s.</p>
+        <div class="version-footer">versione 0035 - "Sono vicino a:", avvio ascolto automatico dopo il messaggio.</div>
     </div>
 
     <div id="emergencyPage" class="page hidden">
-        <div class="version-header">📟 SOS Drive - Versione 0034 (riferimenti puliti) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0035 (via e civico come terzo riferimento) | HTML</div>
         <div class="flex-between">
             <h2 id="serviceTitle">AMBULANZA</h2>
             <span id="emergencyIdBadge" class="id-badge"></span>
@@ -166,8 +166,9 @@
         <div id="coordsContainer" class="info-card">
             <div><strong>📌 COORDINATE:</strong> <span id="latLonDisplay">---</span></div>
             <div><strong>🏠 INDIRIZZO:</strong> <span id="addressDisplay">---</span></div>
-            <div><strong>📍 RIFERIMENTO a:</strong> <span id="refADisplay">---</span></div>
-            <div><strong>📍 RIFERIMENTO b:</strong> <span id="refBDisplay">---</span></div>
+            <div><strong>📍 SONO VICINO A (1):</strong> <span id="refADisplay">---</span></div>
+            <div><strong>📍 SONO VICINO A (2):</strong> <span id="refBDisplay">---</span></div>
+            <div><strong>📍 SONO VICINO A (3 - via/civico):</strong> <span id="refCDisplay">---</span></div>
             <div id="gpsStatus" class="status-msg"></div>
         </div>
 
@@ -211,26 +212,29 @@
         </div>
 
         <button id="backHomeBtn" class="small-btn back-home" style="width:100%; margin-top:24px;">◀ TORNA INDIETRO</button>
-        <div class="version-footer">versione 0034 - Ricerca POI migliorata (esclude fontane, informazioni, panchine).</div>
+        <div class="version-footer">versione 0035 - Dopo il bip, avvio automatico ascolto operatore.</div>
     </div>
 </div>
 
 <script>
-    // ========================= VERSIONE 0034 =========================
-    // - Tutti i testi in italiano (pulsanti, messaggi, etichette).
-    // - Ricerca punti di interesse: esclude categorie inutili (fountain, bench, waste_basket, toilets, telephone, recycling, information).
-    // - Priorità a: ristoranti, bar, farmacie, ospedali, uffici postali, banche, biblioteche, chiese, monumenti, piazze, parchi, supermercati, stazioni.
-    // - Nomi stranieri lasciati originali.
-    // - Copia bilingue nel formato richiesto (prima francese, poi italiano).
-    // - Sintesi vocale funzionante su mobile (testata).
+    // ========================= VERSIONE 0035 =========================
+    // - Tre riferimenti: due POI significativi (con nome, categoria, via/civico) + il terzo è la via e numero civico
+    //   più vicini alle coordinate (ricavato dall'indirizzo completo).
+    // - Etichetta "Sono vicino a:"
+    // - Copia bilingue: in italiano il messaggio inizia con "Attenzione, sono italiano e questo è un messaggio tradotto,
+    //   mi trovo in Emergenza, ripeto questa è un emergenza," poi la nota, poi la domanda finale.
+    // - Lettura vocale: velocità normale (rate 1.0), pausa 1 secondo tra una parola e l'altra (testo normale).
+    // - Per le coordinate: pausa di 2 secondi tra ogni carattere.
+    // - Dopo il messaggio (dopo il bip) parte automaticamente l'ascolto della risposta operatore.
     // =================================================================
 
-    const CURRENT_VERSION = "0034";
+    const CURRENT_VERSION = "0035";
     let currentService = "ambulanza";
     let currentLat = null, currentLng = null;
     let currentAddress = "";
     let currentRefA = "";
     let currentRefB = "";
+    let currentRefC = "";   // via e civico più vicino
     let notesArray = [];
     let selectedNoteId = null;
 
@@ -246,6 +250,7 @@
     const addressDisplay = document.getElementById('addressDisplay');
     const refADisplay = document.getElementById('refADisplay');
     const refBDisplay = document.getElementById('refBDisplay');
+    const refCDisplay = document.getElementById('refCDisplay');
     const gpsStatus = document.getElementById('gpsStatus');
     const newNoteInput = document.getElementById('newNoteInput');
     const addNoteBtn = document.getElementById('addNoteBtn');
@@ -337,7 +342,7 @@
     // ----------------------------- GESTIONE NOTE -----------------------------
     function migrateFromPreviousVersions() {
         const services = ["ambulanza", "polizia", "veterinario", "clinica"];
-        const oldVersions = ["0033", "0032", "0031"];
+        const oldVersions = ["0034", "0033", "0032"];
         for (let service of services) {
             const currentKey = `sos_notes_${service}_${CURRENT_VERSION}`;
             if (localStorage.getItem(currentKey)) continue;
@@ -476,26 +481,30 @@
 
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
-    // ----------------------------- COPIA BILINGUE (FR + IT) -----------------------------
+    // ----------------------------- COPIA BILINGUE (FR + IT) con nuovo testo -----------------------------
     async function getBilingualCopyText() {
         const noteIT = getSelectedNoteText() || "nessuna nota selezionata";
         const coordText = (currentLat && currentLng && !isNaN(currentLat) && !isNaN(currentLng)) ? `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}` : "non disponibili";
         const addrText = (currentAddress && currentAddress.trim() !== "") ? currentAddress : "non disponibile";
         const refAText = currentRefA || "non disponibile";
         const refBText = currentRefB || "non disponibile";
+        const refCText = currentRefC || "non disponibile";
         
-        const testaFR = "JE SUIS ITALIEN, CECI EST UN MESSAGE D'URGENCE ENREGISTRÉ.";
+        // Testo italiano personalizzato
+        const introIT = "Attenzione, sono italiano e questo è un messaggio tradotto, mi trovo in Emergenza, ripeto questa è un emergenza,";
+        const domandaIT = "se hai capito il messaggio e dove mi trovo in questo momento, rispondi: Ho capito, altrimenti pronuncia ripeti dopo il bip.";
+        const italianMessage = `${introIT}\n\n${noteIT}\n\nCoordinate: ${coordText}\nIndirizzo: ${addrText}\nSono vicino a (1): ${refAText}\nSono vicino a (2): ${refBText}\nSono vicino a (3 - via/civico): ${refCText}\n\n${domandaIT}`;
+        
+        // Traduzione in francese
+        const introFR = await translateToFrench(introIT);
         const noteFR = await translateToFrench(noteIT);
         const addrFR = addrText === "non disponibile" ? "non disponible" : await translateToFrench(addrText);
         const refAFR = refAText === "non disponibile" ? "non disponible" : await translateToFrench(refAText);
         const refBFR = refBText === "non disponibile" ? "non disponible" : await translateToFrench(refBText);
-        const domandaFR = "tu as COMPRIS où je suis ? s'il se prononce, JE l'ai COMPRIS, OU s'il se prononce, RÉPÈTE après le bip. 🔔";
+        const refCFR = refCText === "non disponibile" ? "non disponible" : await translateToFrench(refCText);
+        const domandaFR = await translateToFrench(domandaIT);
         
-        const frenchMessage = `${testaFR}\n\n${noteFR}\n\nCoordonnées: ${coordText}\nAdresse: ${addrFR}\nPoint de repère a: ${refAFR}\nPoint de repère b: ${refBFR}\n\n${domandaFR}`;
-        
-        const testaIT = "SONO ITALIANO, QUESTO E' UN MESSAGGIO REGISTRATO DI EMERGENZA.";
-        const domandaIT = "hai CAPITO dove mi trovo? se si pronuncia, HO CAPITO, OPPURE pronuncia, RIPETI dopo il bip. 🔔";
-        const italianMessage = `${testaIT}\n\n${noteIT}\n\nCoordinate: ${coordText}\nIndirizzo: ${addrText}\nRiferimento a: ${refAText}\nRiferimento b: ${refBText}\n\n${domandaIT}`;
+        const frenchMessage = `${introFR}\n\n${noteFR}\n\nCoordonnées: ${coordText}\nAdresse: ${addrFR}\nJe suis près de (1): ${refAFR}\nJe suis près de (2): ${refBFR}\nJe suis près de (3 - rue/numéro): ${refCFR}\n\n${domandaFR}`;
         
         return `${frenchMessage}\n\n-----\n\n${italianMessage}`;
     }
@@ -518,7 +527,7 @@
         }
     }
 
-    // ----------------------------- RICERCA DUE PUNTI DI INTERESSE (esclude categorie inutili) -----------------------------
+    // ----------------------------- RICERCA TRE RIFERIMENTI -----------------------------
     function haversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
@@ -530,18 +539,32 @@
         return R * c;
     }
 
+    // Estrae via e numero civico da un indirizzo (formato Nominatim italiano)
+    function extractStreetAndNumber(address) {
+        if (!address || address === "non disponibile") return address;
+        // Cerco pattern tipico: "Via Roma, 12" oppure "Piazza Garibaldi, 5"
+        const parts = address.split(',');
+        if (parts.length >= 2) {
+            let first = parts[0].trim();
+            let second = parts[1].trim();
+            // se il primo è un numero civico, scambia
+            if (/^\d+/.test(first)) {
+                return `${second} ${first}`;
+            }
+            return `${first} ${second}`;
+        }
+        return address;
+    }
+
     async function fetchTwoNearbyPOI(lat, lng) {
-        // Categorie escluse: fontane, panchine, cestini, toilette, telefoni, riciclaggio, informazioni
         const excludeTags = ["information", "bench", "waste_basket", "toilets", "telephone", "recycling", "fountain", "drinking_water"];
-        // Cerchiamo entro 300 metri per avere un buon campione
         const query = `[out:json];(node(around:300,${lat},${lng})[amenity];node(around:300,${lat},${lng})[shop];node(around:300,${lat},${lng})[tourism];node(around:300,${lat},${lng})[office];node(around:300,${lat},${lng})[leisure];node(around:300,${lat},${lng})[historic];node(around:300,${lat},${lng})[place=square];way(around:300,${lat},${lng})[amenity];way(around:300,${lat},${lng})[shop];way(around:300,${lat},${lng})[place=square];);out center;`;
         const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
         try {
             const response = await fetch(url);
             const data = await response.json();
-            if (!data.elements || data.elements.length === 0) return ["Nessun riferimento nelle vicinanze", ""];
-            
-            const elementsWithCoords = [];
+            if (!data.elements || data.elements.length === 0) return ["Nessun riferimento", "Nessun riferimento"];
+            const elements = [];
             for (let el of data.elements) {
                 let latEl, lonEl;
                 if (el.type === "node") { latEl = el.lat; lonEl = el.lon; }
@@ -549,11 +572,12 @@
                 else continue;
                 let tags = el.tags || {};
                 let cat = tags.amenity || tags.shop || tags.tourism || tags.office || tags.leisure || tags.historic || (tags.place === "square" ? "square" : null);
-                if (!cat) continue;
-                if (excludeTags.includes(cat)) continue;
-                
+                if (!cat || excludeTags.includes(cat)) continue;
                 let name = tags.name || "";
-                // Mappa categorie in italiano (solo se non c'è nome, per rendere la descrizione chiara)
+                let street = tags["addr:street"] || "";
+                let housenumber = tags["addr:housenumber"] || "";
+                let addressPart = "";
+                if (street) addressPart = `${street} ${housenumber}`.trim();
                 const categoryMap = {
                     "pharmacy":"Farmacia","hospital":"Ospedale","police":"Commissariato","post_office":"Ufficio Postale",
                     "bank":"Banca","library":"Biblioteca","fire_station":"Caserma","townhall":"Municipio",
@@ -564,24 +588,25 @@
                 };
                 let readable = categoryMap[cat] || (cat ? cat.charAt(0).toUpperCase()+cat.slice(1) : "Punto di interesse");
                 let display = name ? `${name} (${readable})` : readable;
+                if (addressPart) display += `, ${addressPart}`;
                 let dist = haversineDistance(lat, lng, latEl, lonEl);
-                elementsWithCoords.push({ display, dist });
+                elements.push({ display, dist });
             }
-            elementsWithCoords.sort((a,b) => a.dist - b.dist);
+            elements.sort((a,b) => a.dist - b.dist);
             let refs = [];
-            for (let i=0; i<Math.min(2, elementsWithCoords.length); i++) {
-                let d = Math.round(elementsWithCoords[i].dist);
-                refs.push(`${elementsWithCoords[i].display} a ${d} metri`);
+            for (let i=0; i<Math.min(2, elements.length); i++) {
+                let d = Math.round(elements[i].dist);
+                refs.push(`${elements[i].display} a ${d} metri`);
             }
-            while (refs.length < 2) refs.push("Nessun altro riferimento nelle vicinanze");
+            while (refs.length < 2) refs.push("Nessun altro riferimento");
             return refs;
         } catch (err) {
             console.warn(err);
-            return ["Errore ricerca riferimenti", "Errore ricerca riferimenti"];
+            return ["Errore ricerca", "Errore ricerca"];
         }
     }
 
-    // ----------------------------- GEOLOCALIZZAZIONE + DUE RIFERIMENTI -----------------------------
+    // ----------------------------- GEOLOCALIZZAZIONE + TRE RIFERIMENTI -----------------------------
     async function fetchAddressFromCoords(lat, lng) {
         try {
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=it`;
@@ -591,12 +616,13 @@
         } catch (err) { return "Indirizzo non disponibile (errore connessione)"; }
     }
 
-    async function updateUIWithLocation(lat, lng, address, refA, refB) {
-        currentLat = lat; currentLng = lng; currentAddress = address; currentRefA = refA; currentRefB = refB;
+    async function updateUIWithLocation(lat, lng, address, refA, refB, refC) {
+        currentLat = lat; currentLng = lng; currentAddress = address; currentRefA = refA; currentRefB = refB; currentRefC = refC;
         latLonDisplay.innerText = (lat && lng) ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "---";
         addressDisplay.innerText = address || "---";
         refADisplay.innerText = refA || "---";
         refBDisplay.innerText = refB || "---";
+        refCDisplay.innerText = refC || "---";
     }
 
     async function getLocationAndAddress() {
@@ -608,15 +634,18 @@
             const address = await fetchAddressFromCoords(lat, lng);
             gpsStatus.innerHTML = "🔍 Ricerca due punti di interesse entro 300 m...";
             const [ref1, ref2] = await fetchTwoNearbyPOI(lat, lng);
-            await updateUIWithLocation(lat, lng, address, ref1, ref2);
-            gpsStatus.innerHTML = "✅ Posizione, indirizzo e riferimenti aggiornati!";
+            // Terzo riferimento: via e numero civico dall'indirizzo
+            let ref3 = extractStreetAndNumber(address);
+            if (ref3 === address) ref3 = "Via e numero civico non identificati";
+            await updateUIWithLocation(lat, lng, address, ref1, ref2, ref3);
+            gpsStatus.innerHTML = "✅ Posizione, indirizzo e tre riferimenti aggiornati!";
             setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 3000);
         }, (error) => { gpsStatus.innerHTML = `❌ Errore GPS: ${error.message}`; });
     }
 
     function resetCoordinates() { 
-        currentLat = null; currentLng = null; currentAddress = ""; currentRefA = ""; currentRefB = "";
-        latLonDisplay.innerText = "---"; addressDisplay.innerText = "---"; refADisplay.innerText = "---"; refBDisplay.innerText = "---";
+        currentLat = null; currentLng = null; currentAddress = ""; currentRefA = ""; currentRefB = ""; currentRefC = "";
+        latLonDisplay.innerText = "---"; addressDisplay.innerText = "---"; refADisplay.innerText = "---"; refBDisplay.innerText = "---"; refCDisplay.innerText = "---";
         gpsStatus.innerHTML = "";
     }
 
@@ -638,13 +667,21 @@
         } catch(e) { console.warn("beep fallito", e); }
     }
 
-    // ----------------------------- LETTURA VOCALE (velocità ridotta 20%, pausa 2 secondi coordinate) -----------------------------
-    const RATE_NORMAL = 0.8;
-    const RATE_SPELL = 0.6;
+    // ----------------------------- LETTURA VOCALE (velocità 1.0, pausa 1s tra parole) -----------------------------
+    async function speakWordsWithDelay(text, langCode, rate = 1.0) {
+        if (!text || text === "") return;
+        const words = text.split(/\s+/);
+        for (let word of words) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = langCode;
+            utterance.rate = rate;
+            window.speechSynthesis.speak(utterance);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // pausa 1 secondo tra parole
+        }
+    }
 
     async function speakWithTwoSecondPause(text, langCode) {
         if (!text || text === "") return;
-        const synth = window.speechSynthesis;
         const chars = text.split('');
         for (let i = 0; i < chars.length; i++) {
             let char = chars[i];
@@ -655,8 +692,8 @@
             else wordToSpeak = char;
             const utterance = new SpeechSynthesisUtterance(wordToSpeak);
             utterance.lang = langCode;
-            utterance.rate = RATE_SPELL;
-            synth.speak(utterance);
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
@@ -670,6 +707,7 @@
         let addressText = (currentAddress && currentAddress.trim() !== "") ? currentAddress : (lang === 'it' ? "non disponibile" : "non disponible");
         let refAText = currentRefA || (lang === 'it' ? "non disponibile" : "non disponible");
         let refBText = currentRefB || (lang === 'it' ? "non disponibile" : "non disponible");
+        let refCText = currentRefC || (lang === 'it' ? "non disponibile" : "non disponible");
         let coordValue = (currentLat && currentLng && !isNaN(currentLat) && !isNaN(currentLng)) 
             ? `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}` 
             : (lang === 'it' ? "non disponibili" : "non disponibles");
@@ -677,88 +715,39 @@
         if (lang === 'fr') {
             gpsStatus.innerHTML = "⏳ Traduzione in francese...";
             noteText = await translateToFrench(noteText);
-            if (currentAddress && currentAddress.trim() !== "" && currentAddress !== "non disponibile") addressText = await translateToFrench(currentAddress);
+            if (currentAddress && currentAddress !== "non disponibile") addressText = await translateToFrench(currentAddress);
             if (currentRefA && currentRefA !== "non disponibile") refAText = await translateToFrench(currentRefA);
             if (currentRefB && currentRefB !== "non disponibile") refBText = await translateToFrench(currentRefB);
-            gpsStatus.innerHTML = "🔊 Lettura FR (testa+nota+coordinate pausa 2s+indirizzo+riferimenti+domanda+bip+ascolto)...";
+            if (currentRefC && currentRefC !== "non disponibile") refCText = await translateToFrench(currentRefC);
+            gpsStatus.innerHTML = "🔊 Lettura FR (velocità normale, pausa 1s tra parole)...";
         } else {
-            gpsStatus.innerHTML = "🔊 Lettura IT (testa+nota+coordinate pausa 2s+indirizzo+riferimenti+domanda+bip+ascolto)...";
+            gpsStatus.innerHTML = "🔊 Lettura IT (velocità normale, pausa 1s tra parole)...";
         }
 
-        const testa = (lang === 'it') 
-            ? "SONO ITALIANO, QUESTO E' UN MESSAGGIO REGISTRATO DI EMERGENZA." 
-            : "JE SUIS ITALIEN, CECI EST UN MESSAGE D'URGENCE ENREGISTRÉ.";
-        const testaUtterance = new SpeechSynthesisUtterance(testa);
-        testaUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        testaUtterance.rate = RATE_NORMAL;
-        synth.speak(testaUtterance);
-        await new Promise(resolve => testaUtterance.onend = resolve);
+        const intro = (lang === 'it') 
+            ? "Attenzione, sono italiano e questo è un messaggio tradotto, mi trovo in Emergenza, ripeto questa è un emergenza,"
+            : await translateToFrench("Attenzione, sono italiano e questo è un messaggio tradotto, mi trovo in Emergenza, ripeto questa è un emergenza,");
+        await speakWordsWithDelay(intro, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
         
-        const noteUtterance = new SpeechSynthesisUtterance(noteText);
-        noteUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        noteUtterance.rate = RATE_NORMAL;
-        synth.speak(noteUtterance);
-        await new Promise(resolve => noteUtterance.onend = resolve);
+        await speakWordsWithDelay(noteText, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
         
         const coordLabel = (lang === 'it') ? "Coordinate" : "Coordonnées";
-        const labelUt = new SpeechSynthesisUtterance(coordLabel);
-        labelUt.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        labelUt.rate = RATE_NORMAL;
-        synth.speak(labelUt);
-        await new Promise(resolve => labelUt.onend = resolve);
-        
-        if (coordValue !== "non disponibili" && coordValue !== "non disponibles") {
-            await speakWithTwoSecondPause(coordValue, (lang === 'it' ? 'it-IT' : 'fr-FR'));
-        } else {
-            const fallback = new SpeechSynthesisUtterance(coordValue);
-            fallback.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-            fallback.rate = RATE_NORMAL;
-            synth.speak(fallback);
-            await new Promise(resolve => fallback.onend = resolve);
-        }
+        await speakWordsWithDelay(coordLabel, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
+        await speakWithTwoSecondPause(coordValue, lang === 'it' ? 'it-IT' : 'fr-FR');
         
         const addrLabel = (lang === 'it') ? "Indirizzo" : "Adresse";
-        const addrL = new SpeechSynthesisUtterance(addrLabel);
-        addrL.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        addrL.rate = RATE_NORMAL;
-        synth.speak(addrL);
-        await new Promise(resolve => addrL.onend = resolve);
+        await speakWordsWithDelay(addrLabel, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
+        await speakWordsWithDelay(addressText, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
         
-        const addrV = new SpeechSynthesisUtterance(addressText);
-        addrV.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        addrV.rate = RATE_NORMAL;
-        synth.speak(addrV);
-        await new Promise(resolve => addrV.onend = resolve);
-        
-        const refLabel = (lang === 'it') ? "Riferimenti" : "Points de repère";
-        const refL = new SpeechSynthesisUtterance(refLabel);
-        refL.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        refL.rate = RATE_NORMAL;
-        synth.speak(refL);
-        await new Promise(resolve => refL.onend = resolve);
-        
-        const refAmsg = (lang === 'it') ? `Primo riferimento: ${refAText}` : `Premier point: ${refAText}`;
-        const refAutt = new SpeechSynthesisUtterance(refAmsg);
-        refAutt.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        refAutt.rate = RATE_NORMAL;
-        synth.speak(refAutt);
-        await new Promise(resolve => refAutt.onend = resolve);
-        
-        const refBmsg = (lang === 'it') ? `Secondo riferimento: ${refBText}` : `Deuxième point: ${refBText}`;
-        const refButt = new SpeechSynthesisUtterance(refBmsg);
-        refButt.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        refButt.rate = RATE_NORMAL;
-        synth.speak(refButt);
-        await new Promise(resolve => refButt.onend = resolve);
+        const refLabel = (lang === 'it') ? "Sono vicino a" : "Je suis près de";
+        await speakWordsWithDelay(`${refLabel} 1: ${refAText}`, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
+        await speakWordsWithDelay(`${refLabel} 2: ${refBText}`, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
+        await speakWordsWithDelay(`${refLabel} 3 via e civico: ${refCText}`, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
         
         const domanda = (lang === 'it')
-            ? "hai CAPITO dove mi trovo? se si pronuncia, HO CAPITO, OPPURE pronuncia, RIPETI dopo il bip."
-            : "tu as COMPRIS où je suis ? s'il se prononce, JE l'ai COMPRIS, OU s'il se prononce, RÉPÈTE après le bip.";
-        const domandaUtterance = new SpeechSynthesisUtterance(domanda);
-        domandaUtterance.lang = (lang === 'it' ? 'it-IT' : 'fr-FR');
-        domandaUtterance.rate = RATE_NORMAL;
-        synth.speak(domandaUtterance);
-        await new Promise(resolve => domandaUtterance.onend = resolve);
+            ? "se hai capito il messaggio e dove mi trovo in questo momento, rispondi: Ho capito, altrimenti pronuncia ripeti dopo il bip."
+            : await translateToFrench("se hai capito il messaggio e dove mi trovo in questo momento, rispondi: Ho capito, altrimenti pronuncia ripeti dopo il bip.");
+        await speakWordsWithDelay(domanda, lang === 'it' ? 'it-IT' : 'fr-FR', 1.0);
         
         playBeep();
         await new Promise(resolve => setTimeout(resolve, 800));
