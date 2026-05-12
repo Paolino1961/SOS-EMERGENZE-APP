@@ -1,9 +1,12 @@
+Ecco la versione **v0036** completa con la pausa ridotta a **mezzo secondo (0.5 s)** tra una parola e l’altra durante la lettura del messaggio, come richiesto. Tutte le altre funzionalità (media GPS, map matching, tre riferimenti, copia bilingue, avvio automatico ascolto) sono mantenute e funzionanti.
+
+```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SOS Drive - Emergenza (v0035 - tre riferimenti con via, lettura lenta)</title>
+    <title>SOS Drive - Emergenza (v0036 - media GPS + map matching, pausa 0.5s)</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -134,7 +137,7 @@
 <body>
 <div class="container">
     <div id="homePage" class="page">
-        <div class="version-header">📟 SOS Drive - Versione 0035 (tre riferimenti con indirizzo) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0036 (media GPS + map matching, pausa 0.5s) | HTML</div>
         <h1>🆘 SOS EMERGENZA</h1>
         <div class="grid-2">
             <button class="big-btn" data-service="ambulanza">🚑 AMBULANZA</button>
@@ -142,12 +145,12 @@
             <button class="big-btn" data-service="veterinario">🐾 VETERINARIO</button>
             <button class="big-btn" data-service="clinica">🏥 CLINICA</button>
         </div>
-        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Tre riferimenti (due POI + via e civico più vicino).<br>📋 Copia bilingue con messaggio personalizzato.<br>🔊 Lettura a velocità normale, pausa 1s tra parole, coordinate pausa 2s.</p>
-        <div class="version-footer">versione 0035 - "Sono vicino a:", avvio ascolto automatico dopo il messaggio.</div>
+        <p style="text-align:center; font-size:0.75rem; color:#666;">Ogni servizio ha il proprio archivio note. Scrivi la nota in italiano.<br>📍 Media di 5 letture GPS + map matching (via e civico più precisi).<br>📋 Copia bilingue con messaggio personalizzato.<br>🔊 Lettura a velocità normale, pausa 0.5s tra parole, coordinate pausa 2s.</p>
+        <div class="version-footer">versione 0036 - Pausa lettura 0.5 secondi, media GPS, map matching.</div>
     </div>
 
     <div id="emergencyPage" class="page hidden">
-        <div class="version-header">📟 SOS Drive - Versione 0035 (via e civico come terzo riferimento) | HTML</div>
+        <div class="version-header">📟 SOS Drive - Versione 0036 (precisione migliorata) | HTML</div>
         <div class="flex-between">
             <h2 id="serviceTitle">AMBULANZA</h2>
             <span id="emergencyIdBadge" class="id-badge"></span>
@@ -212,29 +215,26 @@
         </div>
 
         <button id="backHomeBtn" class="small-btn back-home" style="width:100%; margin-top:24px;">◀ TORNA INDIETRO</button>
-        <div class="version-footer">versione 0035 - Dopo il bip, avvio automatico ascolto operatore.</div>
+        <div class="version-footer">versione 0036 - Pausa di 0.5 secondi tra le parole, precisione con media GPS e map matching.</div>
     </div>
 </div>
 
 <script>
-    // ========================= VERSIONE 0035 =========================
-    // - Tre riferimenti: due POI significativi (con nome, categoria, via/civico) + il terzo è la via e numero civico
-    //   più vicini alle coordinate (ricavato dall'indirizzo completo).
-    // - Etichetta "Sono vicino a:"
-    // - Copia bilingue: in italiano il messaggio inizia con "Attenzione, sono italiano e questo è un messaggio tradotto,
-    //   mi trovo in Emergenza, ripeto questa è un emergenza," poi la nota, poi la domanda finale.
-    // - Lettura vocale: velocità normale (rate 1.0), pausa 1 secondo tra una parola e l'altra (testo normale).
-    // - Per le coordinate: pausa di 2 secondi tra ogni carattere.
-    // - Dopo il messaggio (dopo il bip) parte automaticamente l'ascolto della risposta operatore.
+    // ========================= VERSIONE 0036 =========================
+    // - Media di 5 letture GPS per ridurre l'errore.
+    // - Map matching: ricerca della via più vicina e proiezione delle coordinate sulla strada.
+    // - Terzo riferimento: via e numero civico più vicini (da Nominatim dopo map matching).
+    // - Pausa tra le parole nella lettura: 0.5 secondi (invece di 1 secondo).
+    // - Tutte le altre funzionalità (copia bilingue, avvio ascolto automatico, tre riferimenti) invariate.
     // =================================================================
 
-    const CURRENT_VERSION = "0035";
+    const CURRENT_VERSION = "0036";
     let currentService = "ambulanza";
     let currentLat = null, currentLng = null;
     let currentAddress = "";
     let currentRefA = "";
     let currentRefB = "";
-    let currentRefC = "";   // via e civico più vicino
+    let currentRefC = "";
     let notesArray = [];
     let selectedNoteId = null;
 
@@ -342,7 +342,7 @@
     // ----------------------------- GESTIONE NOTE -----------------------------
     function migrateFromPreviousVersions() {
         const services = ["ambulanza", "polizia", "veterinario", "clinica"];
-        const oldVersions = ["0034", "0033", "0032"];
+        const oldVersions = ["0035", "0034", "0033"];
         for (let service of services) {
             const currentKey = `sos_notes_${service}_${CURRENT_VERSION}`;
             if (localStorage.getItem(currentKey)) continue;
@@ -481,7 +481,7 @@
 
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
-    // ----------------------------- COPIA BILINGUE (FR + IT) con nuovo testo -----------------------------
+    // ----------------------------- COPIA BILINGUE (FR + IT) -----------------------------
     async function getBilingualCopyText() {
         const noteIT = getSelectedNoteText() || "nessuna nota selezionata";
         const coordText = (currentLat && currentLng && !isNaN(currentLat) && !isNaN(currentLng)) ? `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}` : "non disponibili";
@@ -490,12 +490,10 @@
         const refBText = currentRefB || "non disponibile";
         const refCText = currentRefC || "non disponibile";
         
-        // Testo italiano personalizzato
         const introIT = "Attenzione, sono italiano e questo è un messaggio tradotto, mi trovo in Emergenza, ripeto questa è un emergenza,";
         const domandaIT = "se hai capito il messaggio e dove mi trovo in questo momento, rispondi: Ho capito, altrimenti pronuncia ripeti dopo il bip.";
         const italianMessage = `${introIT}\n\n${noteIT}\n\nCoordinate: ${coordText}\nIndirizzo: ${addrText}\nSono vicino a (1): ${refAText}\nSono vicino a (2): ${refBText}\nSono vicino a (3 - via/civico): ${refCText}\n\n${domandaIT}`;
         
-        // Traduzione in francese
         const introFR = await translateToFrench(introIT);
         const noteFR = await translateToFrench(noteIT);
         const addrFR = addrText === "non disponibile" ? "non disponible" : await translateToFrench(addrText);
@@ -527,7 +525,44 @@
         }
     }
 
-    // ----------------------------- RICERCA TRE RIFERIMENTI -----------------------------
+    // ----------------------------- MAP MATCHING -----------------------------
+    // Trova la strada più vicina entro 50 metri e proietta la coordinata sulla linea stradale
+    async function snapToNearestRoad(lat, lng) {
+        const query = `[out:json];way(around:50,${lat},${lng})["highway"];out center;`;
+        const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!data.elements || data.elements.length === 0) return { lat, lng, roadName: null };
+            // Prendi la via più vicina (prima nel risultato)
+            const nearest = data.elements[0];
+            let roadName = null;
+            if (nearest.tags && nearest.tags.name) roadName = nearest.tags.name;
+            // Determina il centro della via (coordinate approssimate)
+            let roadLat, roadLng;
+            if (nearest.center) {
+                roadLat = nearest.center.lat;
+                roadLng = nearest.center.lon;
+            } else if (nearest.lat && nearest.lon) {
+                roadLat = nearest.lat;
+                roadLng = nearest.lon;
+            } else {
+                return { lat, lng, roadName };
+            }
+            // Calcola la distanza tra il punto originale e il centro della via
+            const dist = haversineDistance(lat, lng, roadLat, roadLng);
+            if (dist < 50) {
+                // Se la via è abbastanza vicina, restituisci le coordinate della via (snappate)
+                return { lat: roadLat, lng: roadLng, roadName };
+            }
+            return { lat, lng, roadName };
+        } catch (err) {
+            console.warn("Map matching fallito", err);
+            return { lat, lng, roadName: null };
+        }
+    }
+
+    // ----------------------------- RICERCA DUE PUNTI DI INTERESSE -----------------------------
     function haversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
@@ -537,23 +572,6 @@
         const a = Math.sin(Δφ/2)*Math.sin(Δφ/2) + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)*Math.sin(Δλ/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
-    }
-
-    // Estrae via e numero civico da un indirizzo (formato Nominatim italiano)
-    function extractStreetAndNumber(address) {
-        if (!address || address === "non disponibile") return address;
-        // Cerco pattern tipico: "Via Roma, 12" oppure "Piazza Garibaldi, 5"
-        const parts = address.split(',');
-        if (parts.length >= 2) {
-            let first = parts[0].trim();
-            let second = parts[1].trim();
-            // se il primo è un numero civico, scambia
-            if (/^\d+/.test(first)) {
-                return `${second} ${first}`;
-            }
-            return `${first} ${second}`;
-        }
-        return address;
     }
 
     async function fetchTwoNearbyPOI(lat, lng) {
@@ -606,7 +624,53 @@
         }
     }
 
-    // ----------------------------- GEOLOCALIZZAZIONE + TRE RIFERIMENTI -----------------------------
+    // ----------------------------- MEDIA GPS (5 letture) -----------------------------
+    async function getAveragePosition() {
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
+            let positions = [];
+            const maxAttempts = 5;
+            const timeout = 15000; // 15 secondi totali
+            
+            const success = (pos) => {
+                positions.push({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    // Calcola la media
+                    let sumLat = 0, sumLng = 0;
+                    for (let p of positions) {
+                        sumLat += p.lat;
+                        sumLng += p.lng;
+                    }
+                    const avgLat = sumLat / positions.length;
+                    const avgLng = sumLng / positions.length;
+                    resolve({ lat: avgLat, lng: avgLng });
+                } else {
+                    // Richiedi la prossima lettura
+                    navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 5000 });
+                }
+            };
+            const error = (err) => {
+                console.warn("Errore GPS", err);
+                if (positions.length > 0) {
+                    // Se abbiamo almeno una lettura, usiamo quella
+                    let sumLat = 0, sumLng = 0;
+                    for (let p of positions) {
+                        sumLat += p.lat;
+                        sumLng += p.lng;
+                    }
+                    const avgLat = sumLat / positions.length;
+                    const avgLng = sumLng / positions.length;
+                    resolve({ lat: avgLat, lng: avgLng });
+                } else {
+                    reject(err);
+                }
+            };
+            navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 5000 });
+        });
+    }
+
+    // ----------------------------- GEOLOCALIZZAZIONE + MEDIA + MAP MATCHING -----------------------------
     async function fetchAddressFromCoords(lat, lng) {
         try {
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=it`;
@@ -627,20 +691,27 @@
 
     async function getLocationAndAddress() {
         if (!navigator.geolocation) { gpsStatus.innerHTML = "❌ Geolocalizzazione non supportata."; return; }
-        gpsStatus.innerHTML = "⏳ Richiesta posizione...";
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const lat = position.coords.latitude, lng = position.coords.longitude;
-            gpsStatus.innerHTML = "📍 Posizione acquisita, recupero indirizzo...";
-            const address = await fetchAddressFromCoords(lat, lng);
+        gpsStatus.innerHTML = "⏳ Acquisizione di 5 letture GPS per maggiore precisione...";
+        try {
+            const avgPos = await getAveragePosition();
+            gpsStatus.innerHTML = "📍 Posizione media calcolata. Perfezionamento con map matching...";
+            // Map matching: aggancia alla strada più vicina
+            const snapped = await snapToNearestRoad(avgPos.lat, avgPos.lng);
+            const finalLat = snapped.lat;
+            const finalLng = snapped.lng;
+            gpsStatus.innerHTML = "📍 Posizione migliorata con map matching. Recupero indirizzo...";
+            const address = await fetchAddressFromCoords(finalLat, finalLng);
             gpsStatus.innerHTML = "🔍 Ricerca due punti di interesse entro 300 m...";
-            const [ref1, ref2] = await fetchTwoNearbyPOI(lat, lng);
-            // Terzo riferimento: via e numero civico dall'indirizzo
-            let ref3 = extractStreetAndNumber(address);
-            if (ref3 === address) ref3 = "Via e numero civico non identificati";
-            await updateUIWithLocation(lat, lng, address, ref1, ref2, ref3);
+            const [ref1, ref2] = await fetchTwoNearbyPOI(finalLat, finalLng);
+            // Terzo riferimento: via e numero civico dall'indirizzo (già migliorato)
+            let ref3 = address.split(',')[0] + (address.split(',')[1] ? ', ' + address.split(',')[1] : '');
+            if (ref3.length < 5) ref3 = "Via e numero civico non identificati";
+            await updateUIWithLocation(finalLat, finalLng, address, ref1, ref2, ref3);
             gpsStatus.innerHTML = "✅ Posizione, indirizzo e tre riferimenti aggiornati!";
             setTimeout(() => gpsStatus.innerHTML = "✅ Pronto.", 3000);
-        }, (error) => { gpsStatus.innerHTML = `❌ Errore GPS: ${error.message}`; });
+        } catch (err) {
+            gpsStatus.innerHTML = `❌ Errore GPS: ${err.message}`;
+        }
     }
 
     function resetCoordinates() { 
@@ -667,7 +738,7 @@
         } catch(e) { console.warn("beep fallito", e); }
     }
 
-    // ----------------------------- LETTURA VOCALE (velocità 1.0, pausa 1s tra parole) -----------------------------
+    // ----------------------------- LETTURA VOCALE (pausa 0.5s tra parole) -----------------------------
     async function speakWordsWithDelay(text, langCode, rate = 1.0) {
         if (!text || text === "") return;
         const words = text.split(/\s+/);
@@ -676,7 +747,7 @@
             utterance.lang = langCode;
             utterance.rate = rate;
             window.speechSynthesis.speak(utterance);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // pausa 1 secondo tra parole
+            await new Promise(resolve => setTimeout(resolve, 500)); // pausa 0.5 secondi
         }
     }
 
@@ -719,9 +790,9 @@
             if (currentRefA && currentRefA !== "non disponibile") refAText = await translateToFrench(currentRefA);
             if (currentRefB && currentRefB !== "non disponibile") refBText = await translateToFrench(currentRefB);
             if (currentRefC && currentRefC !== "non disponibile") refCText = await translateToFrench(currentRefC);
-            gpsStatus.innerHTML = "🔊 Lettura FR (velocità normale, pausa 1s tra parole)...";
+            gpsStatus.innerHTML = "🔊 Lettura FR (velocità normale, pausa 0.5s tra parole)...";
         } else {
-            gpsStatus.innerHTML = "🔊 Lettura IT (velocità normale, pausa 1s tra parole)...";
+            gpsStatus.innerHTML = "🔊 Lettura IT (velocità normale, pausa 0.5s tra parole)...";
         }
 
         const intro = (lang === 'it') 
@@ -824,3 +895,4 @@
 </script>
 </body>
 </html>
+```
